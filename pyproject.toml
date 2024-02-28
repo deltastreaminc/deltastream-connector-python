@@ -1,0 +1,154 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "deltastream-connector-python"
+dynamic = ["version"]
+description = 'Python Database driver for DeltaStream Inc (PEP 249)'
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE.txt"}
+keywords = ["deltastream", "db", "stream processing"]
+authors = [
+  {name = "DeltaStream Inc", email = "support@deltastream.io" }
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "License :: OSI Approved :: Apache Software License"
+]
+dependencies = [
+  "requests >= 2.31.0, < 3",
+  "urllib3 >= 2.1.0, < 3",
+  "pydantic >= 2.5.3, < 3",
+  "python-dateutil >= 2.8.2, < 3"
+]
+
+[project.optional-dependencies] # Optional
+dev = [
+  "yq"
+]
+
+[project.urls]
+Documentation = "https://github.com/deltastreaminc/deltastream-connector-python#readme"
+Issues = "https://github.com/deltastreaminc/deltastream-connector-python/issues"
+Source = "https://github.com/deltastreaminc/deltastream-connector-python"
+
+[tool.hatch.version]
+path = "src/deltastream_connector_python/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+  "pyyaml",
+  "httpretty",
+  "requests-toolbelt"
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
+gen-openapi = """
+  cd src &&
+  rm -rf openapi_client &&
+  curl https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.2.0/openapi-generator-cli-7.2.0.jar -o openapi-generator-cli.jar &&
+  cp -f ../../../specs/openapi/api-server-v2.yaml . &&
+  yq -Y -i 'del(.paths."/statements".post.requestBody.content."multipart/form-data")' api-server-v2.yaml &&
+  java -jar openapi-generator-cli.jar generate -g python -i api-server-v2.yaml --remove-operation-id-prefix --additional-properties=generateSourceCodeOnly=true &&
+  rm -rf .openapi-generator .openapi-generator-ignore openapi_client/docs openapi_client/test openapi-generator-cli.jar openapi_client_README.md api-server-v2.yaml
+"""
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.types]
+dependencies = [
+  "mypy>=1.0.0",
+]
+
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/deltastream_connector_python tests}"
+
+[tool.hatch.dirs.env]
+virtual = "~/.virtualenvs"
+
+[tool.coverage.run]
+source_pkgs = ["deltastream_connector_python", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/deltastream_connector_python/__about__.py",
+]
+
+[tool.coverage.paths]
+deltastream_connector_python = ["src/deltastream_connector_python", "*/deltastream-connector-python/src/deltastream_connector_python"]
+tests = ["tests", "*/deltastream-connector-python/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.hatch.envs.hatch-static-analysis]
+config-path = "none"
+
+[tool.ruff]
+line-length = 250
+exclude=[
+  "src/openapi_client/**"
+]
+
+
+[tool.ruff.lint]
+extend-select = ["E4", "E7", "E9", "F"]
+extend-ignore = []
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "single"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+#
+# This is currently disabled by default, but it is planned for this
+# to be opt-out in the future.
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+#
+# This only has an effect when the `docstring-code-format` setting is
+# enabled.
+docstring-code-line-length = "dynamic"
