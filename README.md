@@ -23,7 +23,14 @@ import asyncio
 from deltastream.api.conn import APIConnection
 
 # Initialize connection with API token
-conn = APIConnection.from_dsn("https://:<your_token>@api.deltastream.io/v2")
+auth_token = os.getenv("DELTASTREAM_AUTH_TOKEN")
+
+if not auth_token:
+    raise ValueError("Environment variable 'DELTASTREAM_AUTH_TOKEN' is not set")
+
+# Use the token to construct the DSN and create the connection
+dsn = f"https://:{auth_token}@api.deltastream.io/v2"
+conn = APIConnection.from_dsn(dsn)
 
 async def main():
     # Execute SQL queries
