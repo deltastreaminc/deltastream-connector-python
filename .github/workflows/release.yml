@@ -15,7 +15,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: production
       url: https://pypi.org/p/deltastream-connector
     permissions:
       id-token: write # for trusted publishing without token/secret
