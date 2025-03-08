@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Allow manual triggering of the workflow
     inputs:
       python_release_version:
-        description: "Python version to publish"
+        description: "Python version to use for build and publish"
         required: true
         default: "3.12"
 
