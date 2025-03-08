@@ -29,7 +29,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install uv
-          pip install twine
           uv sync --all-packages
       - name: Test with pytest for release
         run: |
