@@ -17,8 +17,8 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -27,7 +27,8 @@ class ErrorResponse(BaseModel):
     ErrorResponse
     """ # noqa: E501
     message: StrictStr
-    __properties: ClassVar[List[str]] = ["message"]
+    trace_id: Optional[StrictStr] = Field(default=None, alias="traceID")
+    __properties: ClassVar[List[str]] = ["message", "traceID"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -80,7 +81,8 @@ class ErrorResponse(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "message": obj.get("message")
+            "message": obj.get("message"),
+            "traceID": obj.get("traceID")
         })
         return _obj
 

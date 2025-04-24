@@ -18,10 +18,12 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
-from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
+from deltastream.api.controlplane.openapi_client.models.dataplane_request import DataplaneRequest
+from deltastream.api.controlplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
+from deltastream.api.controlplane.openapi_client.models.result_set_context import ResultSetContext
+from deltastream.api.controlplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -32,7 +34,9 @@ class ResultSetMetadata(BaseModel):
     encoding: StrictStr
     partition_info: List[ResultSetPartitionInfo] = Field(alias="partitionInfo")
     columns: Annotated[List[ResultSetColumnsInner], Field(min_length=0)]
-    __properties: ClassVar[List[str]] = ["encoding", "partitionInfo", "columns"]
+    dataplane_request: Optional[DataplaneRequest] = Field(default=None, alias="dataplaneRequest")
+    context: Optional[ResultSetContext] = None
+    __properties: ClassVar[List[str]] = ["encoding", "partitionInfo", "columns", "dataplaneRequest", "context"]
 
     @field_validator('encoding')
     def encoding_validate_enum(cls, value):
@@ -94,6 +98,12 @@ class ResultSetMetadata(BaseModel):
                 if _item_columns:
                     _items.append(_item_columns.to_dict())
             _dict['columns'] = _items
+        # override the default output from pydantic by calling `to_dict()` of dataplane_request
+        if self.dataplane_request:
+            _dict['dataplaneRequest'] = self.dataplane_request.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of context
+        if self.context:
+            _dict['context'] = self.context.to_dict()
         return _dict
 
     @classmethod
@@ -108,7 +118,9 @@ class ResultSetMetadata(BaseModel):
         _obj = cls.model_validate({
             "encoding": obj.get("encoding"),
             "partitionInfo": [ResultSetPartitionInfo.from_dict(_item) for _item in obj["partitionInfo"]] if obj.get("partitionInfo") is not None else None,
-            "columns": [ResultSetColumnsInner.from_dict(_item) for _item in obj["columns"]] if obj.get("columns") is not None else None
+            "columns": [ResultSetColumnsInner.from_dict(_item) for _item in obj["columns"]] if obj.get("columns") is not None else None,
+            "dataplaneRequest": DataplaneRequest.from_dict(obj["dataplaneRequest"]) if obj.get("dataplaneRequest") is not None else None,
+            "context": ResultSetContext.from_dict(obj["context"]) if obj.get("context") is not None else None
         })
         return _obj
 

@@ -22,7 +22,7 @@ from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from deltastream.api.controlplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
 from deltastream.api.controlplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-from typing import Set
+from typing import Optional, Set
 from typing_extensions import Self
 
 class ResultSet(BaseModel):

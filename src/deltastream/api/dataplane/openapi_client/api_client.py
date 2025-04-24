@@ -26,12 +26,18 @@ from urllib.parse import quote
 from typing import Tuple, Optional, List, Dict, Union
 from pydantic import SecretStr
 
-from deltastream.api.dataplane.openapi_client.configuration import Configuration
-from deltastream.api.dataplane.openapi_client.api_response import ApiResponse, T as ApiResponseT
-from deltastream.api.dataplane.openapi_client import rest
-from deltastream.api.dataplane.openapi_client.exceptions import (
+from deltastream.api.controlplane.openapi_client.configuration import Configuration
+from deltastream.api.controlplane.openapi_client.api_response import ApiResponse, T as ApiResponseT
+import openapi_client.models
+from deltastream.api.controlplane.openapi_client import rest
+from deltastream.api.controlplane.openapi_client.exceptions import (
     ApiValueError,
-    ApiException
+    ApiException,
+    BadRequestException,
+    UnauthorizedException,
+    ForbiddenException,
+    NotFoundException,
+    ServiceException
 )
 
 RequestSerialized = Tuple[str, str, Dict[str, str], Optional[str], List[str]]
@@ -279,16 +285,13 @@ class ApiClient:
     def response_deserialize(
         self,
         response_data: rest.RESTResponse,
-        response_types_map: Optional[Dict[str, ApiResponseT]] = None
+        response_types_map: Optional[Dict[str, ApiResponseT]]=None
     ) -> ApiResponse[ApiResponseT]:
         """Deserializes response into an object.
         :param response_data: RESTResponse object to be deserialized.
         :param response_types_map: dict of response types.
         :return: ApiResponse
         """
-
-        if response_types_map is None:  # None check rule
-            response_types_map = {}
 
         msg = "RESTResponse.read() must be called before passing it to response_deserialize()"
         assert response_data.data is not None, msg
@@ -514,7 +517,7 @@ class ApiClient:
             if k in collection_formats:
                 collection_format = collection_formats[k]
                 if collection_format == 'multi':
-                    new_params.extend((k, str(value)) for value in v)
+                    new_params.extend((k, quote(str(value))) for value in v)
                 else:
                     if collection_format == 'ssv':
                         delimiter = ' '

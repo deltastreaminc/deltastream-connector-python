@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -29,8 +29,9 @@ class DataplaneRequest(BaseModel):
     token: StrictStr
     uri: StrictStr
     statement_id: StrictStr = Field(alias="statementID")
+    query_id: Optional[StrictStr] = Field(default=None, alias="queryID")
     request_type: StrictStr = Field(alias="requestType")
-    __properties: ClassVar[List[str]] = ["token", "uri", "statementID", "requestType"]
+    __properties: ClassVar[List[str]] = ["token", "uri", "statementID", "queryID", "requestType"]
 
     @field_validator('request_type')
     def request_type_validate_enum(cls, value):
@@ -93,6 +94,7 @@ class DataplaneRequest(BaseModel):
             "token": obj.get("token"),
             "uri": obj.get("uri"),
             "statementID": obj.get("statementID"),
+            "queryID": obj.get("queryID"),
             "requestType": obj.get("requestType")
         })
         return _obj

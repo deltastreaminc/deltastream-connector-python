@@ -20,7 +20,7 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from deltastream.api.controlplane.openapi_client.models.statement_request_parameters import StatementRequestParameters
-from typing import Set
+from typing import Optional, Set
 from typing_extensions import Self
 
 class StatementRequest(BaseModel):
@@ -32,9 +32,10 @@ class StatementRequest(BaseModel):
     role: Optional[StrictStr] = Field(default=None, description="Role to use when executing a statement. This value is case sensitive")
     database: Optional[StrictStr] = Field(default=None, description="Database to add to search path for name resolution. This value is case sensitive")
     var_schema: Optional[StrictStr] = Field(default=None, description="Database schema to add to search path for name resolution. This value is case sensitive", alias="schema")
-    store: Optional[StrictStr] = Field(default=None, description="Store to add to search path for name resolution. This value is case sensitive")
+    store: Optional[StrictStr] = Field(default=None, description="Store to use when executing a statement. This value is case sensitive")
+    compute_pool: Optional[StrictStr] = Field(default=None, description="Compute_pool to use when executing a statement. This value is case sensitive", alias="computePool")
     parameters: Optional[StatementRequestParameters] = None
-    __properties: ClassVar[List[str]] = ["statement", "organization", "role", "database", "schema", "store", "parameters"]
+    __properties: ClassVar[List[str]] = ["statement", "organization", "role", "database", "schema", "store", "computePool", "parameters"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -96,6 +97,7 @@ class StatementRequest(BaseModel):
             "database": obj.get("database"),
             "schema": obj.get("schema"),
             "store": obj.get("store"),
+            "computePool": obj.get("computePool"),
             "parameters": StatementRequestParameters.from_dict(obj["parameters"]) if obj.get("parameters") is not None else None
         })
         return _obj

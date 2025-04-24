@@ -30,22 +30,17 @@ class TestResultSet(unittest.TestCase):
             include_optional is a boolean, when False only required
             params are included, when True both required and
             optional params are included """
-        from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-        from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
-        from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
-        from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
-
-        metadata = ResultSetMetadata(
-            encoding="json",
-            partition_info=[ResultSetPartitionInfo(row_count=1)],
-            columns=[
-                ResultSetColumnsInner(
-                    name="col1",
-                    type="string",
-                    nullable=True
-                )
+        metadata = {
+            "encoding": "json",
+            "partition_info": [{"row_count": 1}],
+            "columns": [
+                {
+                    "name": "col1",
+                    "type": "string",
+                    "nullable": True
+                }
             ]
-        )
+        }
 
         if include_optional:
             return ResultSet(
@@ -54,7 +49,7 @@ class TestResultSet(unittest.TestCase):
                 statement_id="stmt_123",
                 created_on=1234567890,
                 metadata=metadata,
-                data=[[ResultSetDataInnerInner("value1")]]
+                data=[[{"value": "value1"}]]
             )
         else:
             return ResultSet(
@@ -98,21 +93,17 @@ class TestResultSet(unittest.TestCase):
 
     def test_validation(self):
         """Test ResultSet validation rules"""
-        from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-        from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
-        from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
-
-        metadata = ResultSetMetadata(
-            encoding="json",
-            partition_info=[ResultSetPartitionInfo(row_count=1)],
-            columns=[
-                ResultSetColumnsInner(
-                    name="col1",
-                    type="string",
-                    nullable=True
-                )
+        metadata = {
+            "encoding": "json",
+            "partition_info": [{"row_count": 1}],
+            "columns": [
+                {
+                    "name": "col1",
+                    "type": "string",
+                    "nullable": True
+                }
             ]
-        )
+        }
 
         # Test missing required field
         with self.assertRaises(ValueError):
