@@ -28,7 +28,7 @@ from pydantic import SecretStr
 
 from deltastream.api.controlplane.openapi_client.configuration import Configuration
 from deltastream.api.controlplane.openapi_client.api_response import ApiResponse, T as ApiResponseT
-import openapi_client.models
+from deltastream.api.dataplane.openapi_client import models
 from deltastream.api.controlplane.openapi_client import rest
 from deltastream.api.controlplane.openapi_client.exceptions import (
     ApiValueError,

@@ -47,10 +47,12 @@ class StatementHandler:
                 organization=self.rsctx.organization_id,
                 role=self.rsctx.role_name,
                 database=self.rsctx.database_name,
-                schema=self.rsctx.schema_name,  # Pass schema_name instead of rsctx
+                schema=self.rsctx.schema_name,
                 store=self.rsctx.store_name,
+                computePool=self.rsctx.compute_pool_name,
                 parameters=StatementRequestParameters(
-                    session_id=self.session_id, timezone=self.timezone
+                    sessionID=self.session_id,
+                    timezone=self.timezone,
                 ),
             )
             if not statement_request.statement:
@@ -66,6 +68,10 @@ class StatementHandler:
                 result_set = await self.get_statement_status(
                     statement_id=status_response.statement_id, partition_id=0
                 )
+            else:
+                raise ValueError(
+                    f"Unexpected response type from submit_statement: {type(initial_response)}"
+                )
 
             match result_set.sql_state:
                 case SqlState.SQL_STATE_SUCCESSFUL_COMPLETION:
@@ -73,6 +79,8 @@ class StatementHandler:
                 case SqlState.SQL_STATE_SQL_STATEMENT_NOT_YET_COMPLETE:
                     return await self.get_resultset(result_set.statement_id, 0)
                 case _:
+                    from deltastream.api.error import SQLError
+
                     raise SQLError(
                         result_set.message or "No message provided",
                         result_set.sql_state,
@@ -119,8 +127,6 @@ class StatementHandler:
         result = initial_response
 
         if initial_response.metadata.dataplane_request:
-            # dp_request = initial_response.metadata.dataplane_request
-            # Use different variable names to avoid redefinition
             status_response = await self.get_statement_status(
                 statement_id, partition_id
             )
@@ -133,13 +139,16 @@ class StatementHandler:
 def map_error_response(err: ApiException) -> None:
     """Map API exceptions to appropriate error types."""
     try:
-        data = json.loads(err.body)
-        message = data.get("message", str(err))
-        # Check if it's a SQL error (code starting with 42)
-        if data.get("code", "").startswith("42"):
-            # Map 42000 to 42601 (syntax error) as it's not in the SqlState enum
-            sql_state = "42601" if data.get("code") == "42000" else data.get("code")
-            raise SQLError(message, sql_state, "")
+        if err.body is not None:
+            data = json.loads(err.body)
+            message = data.get("message", str(err))
+            # Check if it's a SQL error (code starting with 42)
+            if data.get("code", "").startswith("42"):
+                # Map 42000 to 42601 (syntax error) as it's not in the SqlState enum
+                sql_state = "42601" if data.get("code") == "42000" else data.get("code")
+                raise SQLError(message, sql_state, "")
+        else:
+            message = str(err)
     except (json.JSONDecodeError, AttributeError):
         message = str(err)
 

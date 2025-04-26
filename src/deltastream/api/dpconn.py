@@ -2,13 +2,11 @@ from typing import Optional
 from urllib.parse import urlparse, parse_qs
 import asyncio
 
-from .handlers import map_error_response
 from deltastream.api.dataplane.openapi_client import (
     Configuration,
     DataplaneApi,
     ResultSet,
     StatementStatus,
-    ErrorResponse as ResponseError,
 )
 from .error import AuthenticationError, SQLError, SqlState
 
@@ -36,16 +34,19 @@ class DPAPIConnection:
 
         self.api = DataplaneApi(config)
 
+    def _get_statement_status_api(self, statement_id: str, partition_id: int):
+        resp = self.api.get_statement_status(
+            statement_id=statement_id, partition_id=partition_id
+        )
+        return resp
+
     async def get_statement_status(
         self, statement_id: str, partition_id: int
     ) -> ResultSet:
         try:
-            resp = await self.api.get_statement_status_raw(
-                statement_id=statement_id, partition_id=partition_id
-            )
-
-            if resp.raw.status == 200:
-                result_set = await resp.value()
+            resp = self._get_statement_status_api(statement_id, partition_id)
+            if resp.status == 200:
+                result_set = resp.body
                 if result_set.sql_state == SqlState.SQL_STATE_SUCCESSFUL_COMPLETION:
                     return result_set
                 raise SQLError(
@@ -53,15 +54,20 @@ class DPAPIConnection:
                     result_set.sql_state,
                     result_set.statement_id,
                 )
-            elif resp.raw.status == 202:
+            elif resp.status == 202:
                 statement_status = StatementStatus.from_json(resp.raw.body)
-                await asyncio.sleep(1)  # Don't use return value
-                return await self.get_statement_status(
-                    statement_status.statement_id, partition_id
-                )
+                await asyncio.sleep(1)
+                if statement_status is not None and hasattr(
+                    statement_status, "statement_id"
+                ):
+                    # Recurse, but always call the API again
+                    return await self.get_statement_status(
+                        statement_status.statement_id, partition_id
+                    )
+                else:
+                    raise SQLError("Invalid statement status", "", "")
             else:
-                # Handle default case
-                result_set = await resp.value()
+                result_set = resp.body
                 if result_set.sql_state == SqlState.SQL_STATE_SUCCESSFUL_COMPLETION:
                     return result_set
                 raise SQLError(
@@ -70,11 +76,8 @@ class DPAPIConnection:
                     result_set.statement_id,
                 )
 
-        except ResponseError as err:
-            map_error_response(err)
-            raise
-        except Exception:
-            raise
+        except Exception as exc:
+            raise RuntimeError(str(exc))
 
     async def wait_for_completion(self, statement_id: str) -> ResultSet:
         result_set = await self.get_statement_status(statement_id, 0)

@@ -1,6 +1,7 @@
 from typing import AsyncIterator, List, Optional, Any, Tuple, Callable, Awaitable
 
-from deltastream.api.dataplane.openapi_client import ResultSet
+from deltastream.api.controlplane.openapi_client import ResultSet
+
 from .models import Rows
 from .error import InterfaceError
 from .rows import castRowData, Column
@@ -42,7 +43,11 @@ class ResultsetRows(Rows):
         self.current_row_idx += 1
         if self.current_result_set.data is None:
             return None
-        row = castRowData(self.current_result_set.data[row_idx], self.columns())
+        # Filter out None values for type safety
+        row_data = [
+            item for item in self.current_result_set.data[row_idx] if item is not None
+        ]
+        row = castRowData(row_data, self.columns())
         return row
 
     def columns(self) -> List[Column]:
