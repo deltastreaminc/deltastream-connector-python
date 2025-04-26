@@ -9,17 +9,20 @@ from .dpconn import DPAPIConnection
 from .error import InterfaceError, SQLError
 from .rows import castRowData, Column
 
+
 @dataclass
 class PrintTopicMetadata:
     type: str
     headers: Dict[str, str]
     columns: List[Column]
 
+
 @dataclass
 class DataMessage:
     type: str
     headers: Dict[str, str]
     data: List[str]
+
 
 @dataclass
 class ErrorMessage:
@@ -28,8 +31,10 @@ class ErrorMessage:
     message: str
     sql_code: str
 
+
 class Deferred:
     """A simple implementation of a deferred/promise pattern."""
+
     def __init__(self) -> None:
         self.future: asyncio.Future[Any] = asyncio.Future()
 
@@ -44,6 +49,7 @@ class Deferred:
     @property
     def promise(self):
         return self.future
+
 
 class StreamingRows(Rows):
     def __init__(self, conn: DPAPIConnection, req: DataplaneRequest):
@@ -64,32 +70,33 @@ class StreamingRows(Rows):
             try:
                 ws = await ws_connect(self.req.uri)
                 self.ws = ws
-                
+
                 # Send authentication
-                await ws.send(json.dumps({
-                    "type": "auth",
-                    "accessToken": self.conn.token,
-                    "sessionId": self.conn.session_id,
-                }))
+                await ws.send(
+                    json.dumps(
+                        {
+                            "type": "auth",
+                            "accessToken": self.conn.token,
+                            "sessionId": self.conn.session_id,
+                        }
+                    )
+                )
 
                 async for message in ws:
                     data = json.loads(message)
-                    
+
                     if data["type"] == "metadata":
                         self.metadata = PrintTopicMetadata(**data)
                         deferred_ready.resolve()
-                        
+
                     elif data["type"] == "data":
-                        row = castRowData(
-                            data["data"],
-                            self.columns()
-                        )
+                        row = castRowData(data["data"], self.columns())
                         if self.deferred_row is not None:
                             self.deferred_row.resolve(row)
                             self.deferred_row = None
                         else:
                             self.rows.append(row)
-                            
+
                     elif data["type"] == "error":
                         err = ErrorMessage(**data)
                         self.error = err
@@ -108,7 +115,7 @@ class StreamingRows(Rows):
 
         # Start handling messages in the background
         asyncio.create_task(handle_messages())
-        
+
         # Wait for the connection to be ready
         await deferred_ready.promise
 
@@ -116,7 +123,7 @@ class StreamingRows(Rows):
         """Returns the column definitions."""
         if self.metadata is None:
             return []
-            
+
         return [
             Column(
                 name=column.name,
@@ -124,7 +131,7 @@ class StreamingRows(Rows):
                 nullable=column.nullable,
                 length=column.length,
                 precision=column.precision,
-                scale=column.scale
+                scale=column.scale,
             )
             for column in self.metadata.columns
         ]
@@ -141,9 +148,7 @@ class StreamingRows(Rows):
     async def __anext__(self) -> Optional[List[Any]]:
         if self.error is not None:
             raise SQLError(
-                self.error.message,
-                self.error.sql_code,
-                self.req.statement_id
+                self.error.message, self.error.sql_code, self.req.statement_id
             )
 
         if self.ws is None or not self.ws.open:
@@ -153,12 +158,12 @@ class StreamingRows(Rows):
             row = self.rows.pop(0)
             if row is not None:
                 return row
-            raise InterfaceError('client error: undefined row')
+            raise InterfaceError("client error: undefined row")
 
         self.deferred_row = Deferred()
         row = await self.deferred_row.promise
-        
+
         if row is None:
             raise StopAsyncIteration
-            
+
         return row

@@ -1,110 +1,117 @@
 from enum import Enum
 
+
 class InterfaceError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
-        self.name = 'InterfaceError'
+        self.name = "InterfaceError"
+
 
 class AuthenticationError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
-        self.name = 'AuthenticationError'
+        self.name = "AuthenticationError"
+
 
 class TimeoutError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
-        self.name = 'TimeoutError'
+        self.name = "TimeoutError"
+
 
 class ServerError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
-        self.name = 'ServerError'
+        self.name = "ServerError"
+
 
 class ServiceUnavailableError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
-        self.name = 'ServiceUnavailableError'
+        self.name = "ServiceUnavailableError"
+
 
 class SQLError(Exception):
     def __init__(self, message: str, code: str, statement_id: str):
         super().__init__(message)
-        self.name = 'SQLError'
+        self.name = "SQLError"
         self.code = SqlState(code)
         self.statement_id = statement_id
 
+
 class SqlState(str, Enum):
     # Base SQL States
-    SQL_STATE_00000 = '00000'
-    SQL_STATE_01000 = '01000'
-    SQL_STATE_01004 = '01004'
-    SQL_STATE_01006 = '01006'
-    SQL_STATE_01007 = '01007'
-    SQL_STATE_01P01 = '01P01'
-    SQL_STATE_02000 = '02000'
-    SQL_STATE_03000 = '03000'
-    SQL_STATE_0A000 = '0A000'
-    SQL_STATE_0L000 = '0L000'
-    SQL_STATE_0LP01 = '0LP01'
-    SQL_STATE_2BP01 = '2BP01'
-    SQL_STATE_3D000 = '3D000'
-    SQL_STATE_3D001 = '3D001'
-    SQL_STATE_3D002 = '3D002'
-    SQL_STATE_3D003 = '3D003'
-    SQL_STATE_3D004 = '3D004'
-    SQL_STATE_3D005 = '3D005'
-    SQL_STATE_3D006 = '3D006'
-    SQL_STATE_3D007 = '3D007'
-    SQL_STATE_3D008 = '3D008'
-    SQL_STATE_3D009 = '3D009'
-    SQL_STATE_3D010 = '3D010'
-    SQL_STATE_3D011 = '3D011'
-    SQL_STATE_3E001 = '3E001'
-    SQL_STATE_3E002 = '3E002'
-    SQL_STATE_3E003 = '3E003'
-    SQL_STATE_3E004 = '3E004'
-    SQL_STATE_42501 = '42501'
-    SQL_STATE_42601 = '42601'
-    SQL_STATE_42622 = '42622'
-    SQL_STATE_42710 = '42710'
-    SQL_STATE_42P04 = '42P04'
-    SQL_STATE_42P05 = '42P05'
-    SQL_STATE_42P06 = '42P06'
-    SQL_STATE_42P07 = '42P07'
-    SQL_STATE_42P08 = '42P08'
-    SQL_STATE_42P001 = '42P001'
-    SQL_STATE_42P002 = '42P002'
-    SQL_STATE_57014 = '57014'
-    SQL_STATE_57015 = '57015'
-    SQL_STATE_57000 = '57000'
-    SQL_STATE_53000 = '53000'
-    SQL_STATE_XX000 = 'XX000'
-    SQL_STATE_XX001 = 'XX001'
-    SQL_STATE_3D012 = '3D012'
-    SQL_STATE_3D013 = '3D013'
-    SQL_STATE_3D014 = '3D014'
-    SQL_STATE_3D015 = '3D015'
-    SQL_STATE_3D016 = '3D016'
-    SQL_STATE_3D017 = '3D017'
-    SQL_STATE_3D018 = '3D018'
-    SQL_STATE_3D019 = '3D019'
-    SQL_STATE_3D020 = '3D020'
-    SQL_STATE_3D021 = '3D021'
-    SQL_STATE_3D022 = '3D022'
-    SQL_STATE_3D023 = '3D023'
-    SQL_STATE_3D024 = '3D024'
-    SQL_STATE_3D025 = '3D025'
-    SQL_STATE_3D026 = '3D026'
-    SQL_STATE_42P09 = '42P09'
-    SQL_STATE_42P10 = '42P10'
-    SQL_STATE_42P11 = '42P11'
-    SQL_STATE_42P12 = '42P12'
-    SQL_STATE_42P13 = '42P13'
-    SQL_STATE_42P14 = '42P14'
-    SQL_STATE_42P15 = '42P15'
-    SQL_STATE_42P16 = '42P16'
-    SQL_STATE_42P17 = '42P17'
-    SQL_STATE_42P18 = '42P18'
-    SQL_STATE_42P19 = '42P19'
+    SQL_STATE_00000 = "00000"
+    SQL_STATE_01000 = "01000"
+    SQL_STATE_01004 = "01004"
+    SQL_STATE_01006 = "01006"
+    SQL_STATE_01007 = "01007"
+    SQL_STATE_01P01 = "01P01"
+    SQL_STATE_02000 = "02000"
+    SQL_STATE_03000 = "03000"
+    SQL_STATE_0A000 = "0A000"
+    SQL_STATE_0L000 = "0L000"
+    SQL_STATE_0LP01 = "0LP01"
+    SQL_STATE_2BP01 = "2BP01"
+    SQL_STATE_3D000 = "3D000"
+    SQL_STATE_3D001 = "3D001"
+    SQL_STATE_3D002 = "3D002"
+    SQL_STATE_3D003 = "3D003"
+    SQL_STATE_3D004 = "3D004"
+    SQL_STATE_3D005 = "3D005"
+    SQL_STATE_3D006 = "3D006"
+    SQL_STATE_3D007 = "3D007"
+    SQL_STATE_3D008 = "3D008"
+    SQL_STATE_3D009 = "3D009"
+    SQL_STATE_3D010 = "3D010"
+    SQL_STATE_3D011 = "3D011"
+    SQL_STATE_3E001 = "3E001"
+    SQL_STATE_3E002 = "3E002"
+    SQL_STATE_3E003 = "3E003"
+    SQL_STATE_3E004 = "3E004"
+    SQL_STATE_42501 = "42501"
+    SQL_STATE_42601 = "42601"
+    SQL_STATE_42622 = "42622"
+    SQL_STATE_42710 = "42710"
+    SQL_STATE_42P04 = "42P04"
+    SQL_STATE_42P05 = "42P05"
+    SQL_STATE_42P06 = "42P06"
+    SQL_STATE_42P07 = "42P07"
+    SQL_STATE_42P08 = "42P08"
+    SQL_STATE_42P001 = "42P001"
+    SQL_STATE_42P002 = "42P002"
+    SQL_STATE_57014 = "57014"
+    SQL_STATE_57015 = "57015"
+    SQL_STATE_57000 = "57000"
+    SQL_STATE_53000 = "53000"
+    SQL_STATE_XX000 = "XX000"
+    SQL_STATE_XX001 = "XX001"
+    SQL_STATE_3D012 = "3D012"
+    SQL_STATE_3D013 = "3D013"
+    SQL_STATE_3D014 = "3D014"
+    SQL_STATE_3D015 = "3D015"
+    SQL_STATE_3D016 = "3D016"
+    SQL_STATE_3D017 = "3D017"
+    SQL_STATE_3D018 = "3D018"
+    SQL_STATE_3D019 = "3D019"
+    SQL_STATE_3D020 = "3D020"
+    SQL_STATE_3D021 = "3D021"
+    SQL_STATE_3D022 = "3D022"
+    SQL_STATE_3D023 = "3D023"
+    SQL_STATE_3D024 = "3D024"
+    SQL_STATE_3D025 = "3D025"
+    SQL_STATE_3D026 = "3D026"
+    SQL_STATE_42P09 = "42P09"
+    SQL_STATE_42P10 = "42P10"
+    SQL_STATE_42P11 = "42P11"
+    SQL_STATE_42P12 = "42P12"
+    SQL_STATE_42P13 = "42P13"
+    SQL_STATE_42P14 = "42P14"
+    SQL_STATE_42P15 = "42P15"
+    SQL_STATE_42P16 = "42P16"
+    SQL_STATE_42P17 = "42P17"
+    SQL_STATE_42P18 = "42P18"
+    SQL_STATE_42P19 = "42P19"
 
     # Class 00 — Successful Completion
     SQL_STATE_SUCCESSFUL_COMPLETION = SQL_STATE_00000
@@ -191,7 +198,7 @@ class SqlState(str, Enum):
     SQL_STATE_AMBIGUOUS_ORGANIZATION = SQL_STATE_42P001
     SQL_STATE_AMBIGUOUS_STORE = SQL_STATE_42P002
 
-    # Class 53 — Insufficient Resources 
+    # Class 53 — Insufficient Resources
     SQL_STATE_CONFIGURATION_LIMIT_EXCEEDED = SQL_STATE_53000
 
     # Class 57 — Operator Intervention

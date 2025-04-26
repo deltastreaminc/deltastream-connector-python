@@ -5,11 +5,12 @@ from .models import Rows
 from .error import InterfaceError
 from .rows import castRowData, Column
 
+
 class ResultsetRows(Rows):
     def __init__(
         self,
         get_statement_status: Callable[[str, int], Awaitable[ResultSet]],
-        result_set: ResultSet
+        result_set: ResultSet,
     ):
         self.current_row_idx: int = -1
         self.current_partition_idx: int = 0
@@ -34,18 +35,14 @@ class ResultsetRows(Rows):
 
         if part_idx != self.current_partition_idx:
             self.current_result_set = await self.get_statement_status(
-                self.current_result_set.statement_id,
-                part_idx
+                self.current_result_set.statement_id, part_idx
             )
             self.current_partition_idx = part_idx
 
         self.current_row_idx += 1
         if self.current_result_set.data is None:
             return None
-        row = castRowData(
-            self.current_result_set.data[row_idx],
-            self.columns()
-        )
+        row = castRowData(self.current_result_set.data[row_idx], self.columns())
         return row
 
     def columns(self) -> List[Column]:
@@ -59,15 +56,13 @@ class ResultsetRows(Rows):
             return self.cached_columns
 
         if self.current_result_set.metadata.columns is None:
-            raise InterfaceError('invalid result set metadata')
+            raise InterfaceError("invalid result set metadata")
 
         columns: List[Column] = []
         for column in self.current_result_set.metadata.columns:
-            columns.append(Column(
-                name=column.name,
-                type=column.type,
-                nullable=column.nullable
-            ))
+            columns.append(
+                Column(name=column.name, type=column.type, nullable=column.nullable)
+            )
 
         self.cached_columns = columns
         return columns
@@ -78,7 +73,7 @@ class ResultsetRows(Rows):
         Returns a tuple of (row_index, partition_index).
         """
         if self.current_result_set.metadata.partition_info is None:
-            raise InterfaceError('invalid result set metadata')
+            raise InterfaceError("invalid result set metadata")
 
         for i, partition in enumerate(self.current_result_set.metadata.partition_info):
             if row_idx < partition.row_count:

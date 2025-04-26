@@ -1,7 +1,10 @@
 from typing import Optional, List
 import json
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
-from deltastream.api.controlplane.openapi_client.models import ResultSet, StatementStatus
+from deltastream.api.controlplane.openapi_client.models import (
+    ResultSet,
+    StatementStatus,
+)
 from deltastream.api.controlplane.openapi_client.models.statement_request import (
     StatementRequest,
     StatementRequestParameters,
@@ -23,7 +26,6 @@ from deltastream.api.error import SqlState
 
 
 class StatementHandler:
-
     def __init__(
         self,
         api: DeltastreamApi,
@@ -62,22 +64,19 @@ class StatementHandler:
             elif isinstance(initial_response, StatementStatus):
                 status_response = initial_response
                 result_set = await self.get_statement_status(
-                    statement_id = status_response.statement_id,
-                    partition_id = 0
+                    statement_id=status_response.statement_id, partition_id=0
                 )
 
             match result_set.sql_state:
                 case SqlState.SQL_STATE_SUCCESSFUL_COMPLETION:
                     return result_set
                 case SqlState.SQL_STATE_SQL_STATEMENT_NOT_YET_COMPLETE:
-                    return await self.get_resultset(
-                        result_set.statement_id, 0
-                    )
+                    return await self.get_resultset(result_set.statement_id, 0)
                 case _:
                     raise SQLError(
                         result_set.message or "No message provided",
                         result_set.sql_state,
-                        result_set.statement_id or ""
+                        result_set.statement_id or "",
                     )
 
         except ValidationError:
@@ -101,14 +100,12 @@ class StatementHandler:
                     return result_set
                 case SqlState.SQL_STATE_SQL_STATEMENT_NOT_YET_COMPLETE:
                     await asyncio.sleep(1)
-                    return await self.get_statement_status(
-                        result_set.statement_id, 0
-                    )
+                    return await self.get_statement_status(result_set.statement_id, 0)
                 case _:
                     raise SQLError(
                         result_set.message or "No message provided",
                         result_set.sql_state,
-                        result_set.statement_id or ""
+                        result_set.statement_id or "",
                     )
 
         except ApiException as err:
@@ -120,14 +117,16 @@ class StatementHandler:
     async def get_resultset(self, statement_id: str, partition_id: int) -> ResultSet:
         initial_response = await self.get_statement_status(statement_id, partition_id)
         result = initial_response
-        
+
         if initial_response.metadata.dataplane_request:
             # dp_request = initial_response.metadata.dataplane_request
             # Use different variable names to avoid redefinition
-            status_response = await self.get_statement_status(statement_id, partition_id)
+            status_response = await self.get_statement_status(
+                statement_id, partition_id
+            )
             final_result = status_response
             return final_result
-        
+
         return result
 
 
