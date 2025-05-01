@@ -25,7 +25,10 @@ components:
           description: 'Database schema to add to search path for name resolution. This value is case sensitive'
           type: string
         store:
-          description: 'Store to add to search path for name resolution. This value is case sensitive'
+          description: 'Store to use when executing a statement. This value is case sensitive'
+          type: string
+        computePool:
+          description: 'Compute_pool to use when executing a statement. This value is case sensitive'
           type: string
         # bindings:
         #   type: object
@@ -144,6 +147,8 @@ components:
           nullable: true
       required:
         - encoding
+        - partitionInfo
+        - columns
     ResultSetColumns:
       type: array
       minItems: 0
@@ -156,6 +161,8 @@ components:
             type: string
           nullable:
             type: boolean
+          display_hint:
+            type: string
         required:
           - name
           - type
@@ -168,6 +175,8 @@ components:
         uri:
           type: string
         statementID:
+          type: string
+        queryID:
           type: string
         requestType:
           type: string
@@ -193,10 +202,14 @@ components:
           type: string
         storeName:
           type: string
+        computePoolName:
+          type: string
     ErrorResponse:
       type: object
       properties:
         message:
+          type: string
+        traceID:
           type: string
       required:
         - message
@@ -299,6 +312,26 @@ components:
       name: 'timezone'
       in: query
       allowEmptyValue: false
+    resourceType:
+      name: resourceType
+      in: path
+      schema:
+        type: string
+        enum: [function_source, descriptor_source]
+      required: true
+    resourceName:
+      name: resourceName
+      in: path
+      schema:
+        type: string
+      required: true
+    organizationID:
+      name: organizationID
+      in: path
+      schema:
+        type: string
+        format: uuid
+      required: true
   securitySchemes:
     apiToken:
       type: http
@@ -419,5 +452,36 @@ paths:
           $ref: '#/components/responses/ErrInternal'
         '503':
           $ref: '#/components/responses/ErrServiceUnavailable'
+  /download/{resourceType}/{organizationID}/{resourceName}:
+    get:
+      operationId: DownloadResource
+      description: Download a resource
+      tags:
+        - deltastream
+      parameters:
+      - $ref: "#/components/parameters/resourceType"
+      - $ref: "#/components/parameters/organizationID"
+      - $ref: "#/components/parameters/resourceName"
+      responses:
+        '200':
+          description: Download file
+          content:
+            'application/octet-stream':
+              schema:
+                type: string
+                format: bytes
+        '400':
+          $ref: '#/components/responses/ErrBadRequest'
+        '403':
+          $ref: '#/components/responses/ErrForbidden'
+        '404':
+          $ref: '#/components/responses/ErrNotFound'
+        '408':
+          $ref: '#/components/responses/ErrDeadlineExceeded'
+        '500':
+          $ref: '#/components/responses/ErrInternal'
+        '503':
+          $ref: '#/components/responses/ErrServiceUnavailable'
+
 security:
   - apiToken: []
