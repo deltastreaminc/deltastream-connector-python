@@ -142,11 +142,6 @@ def map_error_response(err: ApiException) -> None:
         if err.body is not None:
             data = json.loads(err.body)
             message = data.get("message", str(err))
-            # Check if it's a SQL error (code starting with 42)
-            if data.get("code", "").startswith("42"):
-                # Map 42000 to 42601 (syntax error) as it's not in the SqlState enum
-                sql_state = "42601" if data.get("code") == "42000" else data.get("code")
-                raise SQLError(message, sql_state, "")
         else:
             message = str(err)
     except (json.JSONDecodeError, AttributeError):

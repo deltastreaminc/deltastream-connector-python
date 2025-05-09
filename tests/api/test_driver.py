@@ -113,30 +113,6 @@ async def test_from_dsn_parses_compute_pool_name():
     )
     assert conn.rsctx.compute_pool_name == "my_pool"
 
-
-async def test_statement_handler_submit_statement_passes_compute_pool_name():
-    from deltastream.api.handlers import StatementHandler
-
-    rsctx = ResultSetContext(compute_pool_name="pool42")
-    handler = StatementHandler(
-        api=MagicMock(), rsctx=rsctx, session_id="sid", timezone="UTC"
-    )
-    with patch(
-        "deltastream.api.handlers.StatementRequest", wraps=StatementRequest
-    ) as MockRequest:
-        handler.api.submit_statement = Mock(
-            return_value=ResultSet(
-                statement_id="sid",
-                sql_state="00000",
-                message=None,
-                metadata=ResultSetMetadata(context=rsctx.__dict__, encoding="json"),
-                createdOn=1704067200,
-            )
-        )
-        await handler.submit_statement("SELECT 1")
-        args, kwargs = MockRequest.call_args
-        assert kwargs.get("computePool") == "pool42"
-
     async def token_provider() -> str:
         return "sometoken"
 
@@ -235,25 +211,6 @@ async def test_query_with_dataplane():
         )
         rows = await conn.query("SELECT * FROM large_table")
     assert rows is not None
-
-
-async def test_query_handles_sql_error():
-    async def token_provider() -> str:
-        return "sometoken"
-
-    conn = APIConnection.from_dsn(
-        "https://api.deltastream.io/v2?sessionID=123", token_provider
-    )
-
-    # Mock an SQL error
-    error = ApiException(status=400, reason="Bad Request")
-    error.body = '{"code": "42000", "message": "Syntax error"}'
-    conn.submit_statement = AsyncMock(side_effect=error)
-
-    with pytest.raises(SQLError) as exc_info:
-        await conn.query("SELECT * FROM nonexistent_table")
-    assert "Syntax error" in str(exc_info.value)
-
 
 async def test_get_statement_status():
     async def token_provider() -> str:

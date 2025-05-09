@@ -35,7 +35,10 @@ class SQLError(Exception):
     def __init__(self, message: str, code: str, statement_id: str):
         super().__init__(message)
         self.name = "SQLError"
-        self.code = SqlState(code)
+        try:
+            self.code = SqlState(code)
+        except ValueError:
+            self.code = SqlState.SQL_STATE_UNDEFINED
         self.statement_id = statement_id
 
 
