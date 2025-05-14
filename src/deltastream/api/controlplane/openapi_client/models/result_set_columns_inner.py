@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -29,7 +29,8 @@ class ResultSetColumnsInner(BaseModel):
     name: StrictStr
     type: StrictStr
     nullable: StrictBool
-    __properties: ClassVar[List[str]] = ["name", "type", "nullable"]
+    display_hint: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["name", "type", "nullable", "display_hint"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -84,7 +85,8 @@ class ResultSetColumnsInner(BaseModel):
         _obj = cls.model_validate({
             "name": obj.get("name"),
             "type": obj.get("type"),
-            "nullable": obj.get("nullable")
+            "nullable": obj.get("nullable"),
+            "display_hint": obj.get("display_hint")
         })
         return _obj
 

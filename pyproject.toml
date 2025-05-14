@@ -28,13 +28,13 @@ Issues = "https://github.com/deltastreaminc/deltastream-connector-python/issues"
 
 [dependency-groups]
 dev = [
-  "pytest>=8.3.4",
-  "pytest-cov>=6.0.0",
-  "tox>=3.9.0",
-  "flake8>=4.0.0",
+  "pytest>=8.3.5",
+  "pytest-cov>=6.1.1",
+  "tox>=4.25.0",
+  "flake8>=7.2.0",
   "types-python-dateutil>=2.8.19.14",
   "mypy>=1.15.0",
-  "pytest-asyncio>=0.25.3",
+  "pytest-asyncio>=0.26.0",
 ]
 lint = [
     "ruff"
@@ -97,3 +97,4 @@ extension-pkg-whitelist = "pydantic"
 [tool.ruff]
 line-length = 88
 indent-width = 4
+exclude = ["src/deltastream/api/controlplane", "src/deltastream/api/dataplane", "src/openapi_client"]

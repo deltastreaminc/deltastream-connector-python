@@ -24,6 +24,7 @@ class ResultSetContext:
     database_name: Optional[str] = None
     schema_name: Optional[str] = None
     store_name: Optional[str] = None
+    compute_pool_name: Optional[str] = None
 
 
 @dataclass

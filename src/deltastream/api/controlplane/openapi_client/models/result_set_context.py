@@ -19,7 +19,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from typing import Set
+from typing import Optional, Set
 from typing_extensions import Self
 
 class ResultSetContext(BaseModel):
@@ -31,7 +31,8 @@ class ResultSetContext(BaseModel):
     database_name: Optional[StrictStr] = Field(default=None, alias="databaseName")
     schema_name: Optional[StrictStr] = Field(default=None, alias="schemaName")
     store_name: Optional[StrictStr] = Field(default=None, alias="storeName")
-    __properties: ClassVar[List[str]] = ["organizationID", "roleName", "databaseName", "schemaName", "storeName"]
+    compute_pool_name: Optional[StrictStr] = Field(default=None, alias="computePoolName")
+    __properties: ClassVar[List[str]] = ["organizationID", "roleName", "databaseName", "schemaName", "storeName", "computePoolName"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -88,7 +89,8 @@ class ResultSetContext(BaseModel):
             "roleName": obj.get("roleName"),
             "databaseName": obj.get("databaseName"),
             "schemaName": obj.get("schemaName"),
-            "storeName": obj.get("storeName")
+            "storeName": obj.get("storeName"),
+            "computePoolName": obj.get("computePoolName")
         })
         return _obj
 
