@@ -1,5 +1,7 @@
-from typing import List, Optional, Callable, Awaitable, Dict
+from typing import List, Optional, Callable, Awaitable, Dict, Union
 from urllib.parse import urlparse, parse_qs
+import os
+import mimetypes
 from .blob import Blob
 from .error import AuthenticationError
 from deltastream.api.controlplane.openapi_client.api import DeltastreamApi
@@ -179,6 +181,115 @@ class APIConnection:
         except ApiException as err:
             map_error_response(err)
             raise
+
+    async def exec_with_files(
+        self, query: str, file_paths: Optional[List[Union[str, Dict[str, str]]]] = None
+    ) -> None:
+        """Execute a query with file attachments using file paths.
+
+        Args:
+            query: The SQL query to execute
+            file_paths: List of file paths or dictionaries with file configuration.
+                       Can be:
+                       - List of strings: file paths (filename will be auto-detected)
+                       - List of dicts with keys: 'path', 'name' (optional), 'content_type' (optional)
+
+        Example:
+            # Simple file paths
+            await conn.exec_with_files(
+                "CREATE FUNCTION_SOURCE \"my_func\" WITH ('file' = 'my_jar.jar');",
+                ["/path/to/my_jar.jar"]
+            )
+
+            # With custom names and content types
+            await conn.exec_with_files(
+                "CREATE FUNCTION_SOURCE \"my_func\" WITH ('file' = 'custom_name.jar');",
+                [{"path": "/path/to/file.jar", "name": "custom_name.jar", "content_type": "application/java-archive"}]
+            )
+        """
+        attachments = None
+        if file_paths is not None:
+            attachments = []
+            for file_config in file_paths:
+                if isinstance(file_config, str):
+                    # Simple file path
+                    file_path = file_config
+                    file_name = os.path.basename(file_path)
+                    content_type = mimetypes.guess_type(file_path)[0]
+                elif isinstance(file_config, dict):
+                    # Dictionary with configuration
+                    file_path = file_config["path"]
+                    file_name = file_config.get("name", os.path.basename(file_path))
+                    content_type = file_config.get(
+                        "content_type", mimetypes.guess_type(file_path)[0]
+                    )
+                else:
+                    raise ValueError("file_paths must contain strings or dictionaries")
+
+                # Read file and create blob
+                with open(file_path, "rb") as f:
+                    data = f.read()
+
+                blob = Blob.from_bytes(data, name=file_name, content_type=content_type)
+                attachments.append(blob)
+
+        await self.exec(query, attachments)
+
+    async def query_with_files(
+        self, query: str, file_paths: Optional[List[Union[str, Dict[str, str]]]] = None
+    ) -> Rows:
+        """Execute a query with file attachments using file paths and return results.
+
+        Args:
+            query: The SQL query to execute
+            file_paths: List of file paths or dictionaries with file configuration.
+                       Can be:
+                       - List of strings: file paths (filename will be auto-detected)
+                       - List of dicts with keys: 'path', 'name' (optional), 'content_type' (optional)
+
+        Returns:
+            Rows object for iterating through results
+
+        Example:
+            # Simple file paths
+            rows = await conn.query_with_files(
+                "CREATE FUNCTION_SOURCE \"my_func\" WITH ('file' = 'my_jar.jar');",
+                ["/path/to/my_jar.jar"]
+            )
+
+            # With custom names and content types
+            rows = await conn.query_with_files(
+                "CREATE FUNCTION_SOURCE \"my_func\" WITH ('file' = 'custom_name.jar');",
+                [{"path": "/path/to/file.jar", "name": "custom_name.jar", "content_type": "application/java-archive"}]
+            )
+        """
+        attachments = None
+        if file_paths is not None:
+            attachments = []
+            for file_config in file_paths:
+                if isinstance(file_config, str):
+                    # Simple file path
+                    file_path = file_config
+                    file_name = os.path.basename(file_path)
+                    content_type = mimetypes.guess_type(file_path)[0]
+                elif isinstance(file_config, dict):
+                    # Dictionary with configuration
+                    file_path = file_config["path"]
+                    file_name = file_config.get("name", os.path.basename(file_path))
+                    content_type = file_config.get(
+                        "content_type", mimetypes.guess_type(file_path)[0]
+                    )
+                else:
+                    raise ValueError("file_paths must contain strings or dictionaries")
+
+                # Read file and create blob
+                with open(file_path, "rb") as f:
+                    data = f.read()
+
+                blob = Blob.from_bytes(data, name=file_name, content_type=content_type)
+                attachments.append(blob)
+
+        return await self.query(query, attachments)
 
     @staticmethod
     def _dataplane_to_controlplane_resultset(dp_rs) -> CPResultSet:

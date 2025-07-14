@@ -7,6 +7,7 @@ A Python client library for [DeltaStream](https://deltastream.io) - a SQL stream
 - Asynchronous API client for DeltaStream
 - Support for SQL statements execution
 - Streaming result sets
+- File attachments for SQL queries (e.g., JAR files for UDFs)
 - API Token authentication
 - Python 3.11+ support
 
@@ -42,6 +43,57 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+```
+
+## File Attachments
+
+The connector provides convenient helper functions to attach files (like JAR files for UDFs) to SQL queries without manually creating blob objects.
+
+### Simple File Attachment
+
+```python
+import asyncio
+from deltastream.api.conn import APIConnection
+
+async def main():
+    conn = APIConnection.from_dsn("https://:{token}@api.deltastream.io/v2")
+    
+    # Create a function source with a JAR file attachment
+    await conn.exec_with_files(
+        "CREATE FUNCTION_SOURCE \"my_udf\" WITH ('file' = 'my_function.jar', 'description' = 'My custom UDF');",
+        ["/path/to/my_function.jar"]
+    )
+    
+    # Query function sources and get results
+    rows = await conn.query_with_files("SHOW FUNCTION_SOURCES;")
+    async for row in rows:
+        print(f"Function: {row[0]}, Status: {row[1]}")
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
+
+### Advanced File Attachment Configuration
+
+```python
+# Custom file names and content types
+await conn.exec_with_files(
+    "CREATE FUNCTION_SOURCE \"advanced_udf\" WITH ('file' = 'custom_name.jar');",
+    [{
+        "path": "/path/to/actual_file.jar",
+        "name": "custom_name.jar",
+        "content_type": "application/java-archive"
+    }]
+)
+
+# Multiple files
+await conn.exec_with_files(
+    "CREATE FUNCTION_SOURCE \"multi_file_udf\" WITH ('file' = 'main.jar', 'lib' = 'dependency.jar');",
+    [
+        "/path/to/main.jar",
+        {"path": "/path/to/lib.jar", "name": "dependency.jar"}
+    ]
+)
 ```
 
 ## Authentication

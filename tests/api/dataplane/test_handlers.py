@@ -1,11 +1,14 @@
-from deltastream.api.conn import APIConnection
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
 from deltastream.api.error import SQLError
 import pytest
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock, patch
 from deltastream.api.controlplane.openapi_client.models.result_set import ResultSet
-from deltastream.api.controlplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-from deltastream.api.controlplane.openapi_client.models.result_set_context import ResultSetContext
+from deltastream.api.controlplane.openapi_client.models.result_set_metadata import (
+    ResultSetMetadata,
+)
+from deltastream.api.controlplane.openapi_client.models.result_set_context import (
+    ResultSetContext,
+)
 from deltastream.api.handlers import StatementHandler, StatementRequest
 
 pytestmark = pytest.mark.asyncio
@@ -32,6 +35,7 @@ async def test_statement_handler_submit_statement_passes_compute_pool_name():
         args, kwargs = MockRequest.call_args
         assert kwargs.get("computePool") == "pool42"
 
+
 async def test_query_handles_sql_error():
     rsctx = ResultSetContext(compute_pool_name="pool42")
     handler = StatementHandler(
@@ -50,26 +54,33 @@ async def test_query_handles_sql_error():
 
     with pytest.raises(SQLError) as exc_info:
         await handler.submit_statement("SELECT * FROM nonexistent_table")
-    
+
     assert "Syntax error near 'FROM'" in str(exc_info.value)
     assert exc_info.value.code == "42601"
     assert exc_info.value.statement_id == "sid"
 
-@pytest.mark.parametrize("status_code,expected_error,error_message", [
-    (400, "InterfaceError", "Bad request"),
-    (401, "AuthenticationError", "Unauthorized"),
-    (403, "AuthenticationError", "Forbidden"),
-    (404, "InterfaceError", "Not found"),
-    (408, "TimeoutError", "Request timeout"),
-    (500, "ServerError", "Internal server error"),
-    (503, "ServiceUnavailableError", "Service unavailable"),
-    (418, "InterfaceError", "Unexpected interface error"),  # Testing default case
-])
+
+@pytest.mark.parametrize(
+    "status_code,expected_error,error_message",
+    [
+        (400, "InterfaceError", "Bad request"),
+        (401, "AuthenticationError", "Unauthorized"),
+        (403, "AuthenticationError", "Forbidden"),
+        (404, "InterfaceError", "Not found"),
+        (408, "TimeoutError", "Request timeout"),
+        (500, "ServerError", "Internal server error"),
+        (503, "ServiceUnavailableError", "Service unavailable"),
+        (418, "InterfaceError", "Unexpected interface error"),  # Testing default case
+    ],
+)
 async def test_map_error_response(status_code, expected_error, error_message):
     from deltastream.api.handlers import map_error_response
     from deltastream.api.error import (
-        InterfaceError, AuthenticationError, ServerError,
-        TimeoutError, ServiceUnavailableError
+        InterfaceError,
+        AuthenticationError,
+        ServerError,
+        TimeoutError,
+        ServiceUnavailableError,
     )
 
     # Create an API exception with the test parameters
@@ -91,6 +102,7 @@ async def test_map_error_response(status_code, expected_error, error_message):
         map_error_response(error)
     assert error_message in str(exc_info.value)
 
+
 async def test_map_error_response_handles_invalid_json():
     from deltastream.api.handlers import map_error_response
     from deltastream.api.error import InterfaceError
@@ -103,6 +115,7 @@ async def test_map_error_response_handles_invalid_json():
         map_error_response(error)
     assert str(error) in str(exc_info.value)
 
+
 async def test_map_error_response_handles_none_body():
     from deltastream.api.handlers import map_error_response
     from deltastream.api.error import InterfaceError
@@ -114,4 +127,3 @@ async def test_map_error_response_handles_none_body():
     with pytest.raises(InterfaceError) as exc_info:
         map_error_response(error)
     assert str(error) in str(exc_info.value)
-
