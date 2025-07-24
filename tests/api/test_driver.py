@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, Mock, MagicMock, patch
 from deltastream.api.conn import APIConnection
-from deltastream.api.error import AuthenticationError, SQLError
+from deltastream.api.error import AuthenticationError
 from deltastream.api.controlplane.openapi_client.models.version import (
     Version as ApiVersion,
 )
@@ -16,7 +16,9 @@ from deltastream.api.controlplane.openapi_client.models.dataplane_request import
     DataplaneRequest,
 )
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
-from deltastream.api.handlers import StatementRequest
+from deltastream.api.blob import Blob
+import tempfile
+import os
 
 pytestmark = pytest.mark.asyncio
 
@@ -212,6 +214,7 @@ async def test_query_with_dataplane():
         rows = await conn.query("SELECT * FROM large_table")
     assert rows is not None
 
+
 async def test_get_statement_status():
     async def token_provider() -> str:
         return "sometoken"
@@ -232,3 +235,429 @@ async def test_get_statement_status():
     result = await conn.get_statement_status("statement_123", 0)
     assert result is not None
     assert isinstance(result, ResultSet)
+
+
+async def test_exec_with_files_simple_file_paths():
+    """Test exec_with_files with simple file paths."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Create temporary test files
+    with tempfile.NamedTemporaryFile(suffix=".jar", delete=False) as f1:
+        f1.write(b"test jar content")
+        jar_path = f1.name
+
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f2:
+        f2.write(b"test text content")
+        txt_path = f2.name
+
+    try:
+        # Mock the exec method to capture the attachments
+        mock_exec = AsyncMock()
+        conn.exec = mock_exec
+
+        query = "CREATE FUNCTION_SOURCE \"my_func\" WITH ('file' = 'test.jar');"
+        await conn.exec_with_files(query, [jar_path, txt_path])
+
+        # Verify exec was called with correct parameters
+        mock_exec.assert_called_once()
+        call_args = mock_exec.call_args
+        assert call_args[0][0] == query  # First positional arg is query
+        attachments = call_args[0][1]  # Second positional arg is attachments
+
+        assert len(attachments) == 2
+        assert all(isinstance(blob, Blob) for blob in attachments)
+        assert attachments[0].name == os.path.basename(jar_path)
+        assert attachments[1].name == os.path.basename(txt_path)
+        assert attachments[0].content_type == "application/java-archive"
+        assert attachments[1].content_type == "text/plain"
+        assert attachments[0].to_bytes() == b"test jar content"
+        assert attachments[1].to_bytes() == b"test text content"
+
+    finally:
+        # Clean up temporary files
+        os.unlink(jar_path)
+        os.unlink(txt_path)
+
+
+async def test_exec_with_files_dict_config():
+    """Test exec_with_files with dictionary configuration."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Create temporary test file
+    with tempfile.NamedTemporaryFile(suffix=".jar", delete=False) as f:
+        f.write(b"custom jar content")
+        jar_path = f.name
+
+    try:
+        # Mock the exec method
+        mock_exec = AsyncMock()
+        conn.exec = mock_exec
+
+        query = "CREATE FUNCTION_SOURCE \"my_func\" WITH ('file' = 'custom_name.jar');"
+        file_config = [
+            {
+                "path": jar_path,
+                "name": "custom_name.jar",
+                "content_type": "application/java-archive",
+            }
+        ]
+        await conn.exec_with_files(query, file_config)
+
+        # Verify exec was called with correct parameters
+        mock_exec.assert_called_once()
+        call_args = mock_exec.call_args
+        attachments = call_args[0][1]
+
+        assert len(attachments) == 1
+        assert attachments[0].name == "custom_name.jar"
+        assert attachments[0].content_type == "application/java-archive"
+        assert attachments[0].to_bytes() == b"custom jar content"
+
+    finally:
+        os.unlink(jar_path)
+
+
+async def test_exec_with_files_no_files():
+    """Test exec_with_files with no files provided."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Mock the exec method
+    mock_exec = AsyncMock()
+    conn.exec = mock_exec
+
+    query = "SELECT * FROM my_table;"
+    await conn.exec_with_files(query, None)
+
+    # Verify exec was called with None attachments
+    mock_exec.assert_called_once_with(query, None)
+
+
+async def test_exec_with_files_empty_list():
+    """Test exec_with_files with empty file list."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Mock the exec method
+    mock_exec = AsyncMock()
+    conn.exec = mock_exec
+
+    query = "SELECT * FROM my_table;"
+    await conn.exec_with_files(query, [])
+
+    # Verify exec was called with empty attachments list
+    mock_exec.assert_called_once_with(query, [])
+
+
+async def test_exec_with_files_invalid_file_config():
+    """Test exec_with_files with invalid file configuration."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    query = "SELECT * FROM my_table;"
+
+    # Test with invalid type in file_paths
+    with pytest.raises(
+        ValueError, match="file_paths must contain strings or dictionaries"
+    ):
+        await conn.exec_with_files(query, [123])  # Invalid type
+
+
+async def test_exec_with_files_missing_file():
+    """Test exec_with_files with non-existent file."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    query = "SELECT * FROM my_table;"
+
+    # Test with non-existent file
+    with pytest.raises(FileNotFoundError):
+        await conn.exec_with_files(query, ["/non/existent/file.jar"])
+
+
+async def test_query_with_files_simple_file_paths():
+    """Test query_with_files with simple file paths."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Create temporary test file
+    with tempfile.NamedTemporaryFile(suffix=".jar", delete=False) as f:
+        f.write(b"test jar content")
+        jar_path = f.name
+
+    try:
+        # Mock the query method
+        mock_rows = Mock()
+        mock_query = AsyncMock(return_value=mock_rows)
+        conn.query = mock_query
+
+        query = "SELECT * FROM my_function('test.jar');"
+        result = await conn.query_with_files(query, [jar_path])
+
+        # Verify query was called with correct parameters
+        mock_query.assert_called_once()
+        call_args = mock_query.call_args
+        assert call_args[0][0] == query
+        attachments = call_args[0][1]
+
+        assert len(attachments) == 1
+        assert attachments[0].name == os.path.basename(jar_path)
+        assert attachments[0].content_type == "application/java-archive"
+        assert attachments[0].to_bytes() == b"test jar content"
+
+        # Verify return value
+        assert result is mock_rows
+
+    finally:
+        os.unlink(jar_path)
+
+
+async def test_query_with_files_dict_config():
+    """Test query_with_files with dictionary configuration."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Create temporary test file
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
+        f.write(b"test content")
+        file_path = f.name
+
+    try:
+        # Mock the query method
+        mock_rows = Mock()
+        mock_query = AsyncMock(return_value=mock_rows)
+        conn.query = mock_query
+
+        query = "SELECT * FROM my_function('custom.txt');"
+        file_config = [
+            {"path": file_path, "name": "custom.txt", "content_type": "text/plain"}
+        ]
+        result = await conn.query_with_files(query, file_config)
+
+        # Verify query was called with correct parameters
+        mock_query.assert_called_once()
+        call_args = mock_query.call_args
+        attachments = call_args[0][1]
+
+        assert len(attachments) == 1
+        assert attachments[0].name == "custom.txt"
+        assert attachments[0].content_type == "text/plain"
+        assert attachments[0].to_bytes() == b"test content"
+
+        # Verify return value
+        assert result is mock_rows
+
+    finally:
+        os.unlink(file_path)
+
+
+async def test_query_with_files_no_files():
+    """Test query_with_files with no files provided."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Mock the query method
+    mock_rows = Mock()
+    mock_query = AsyncMock(return_value=mock_rows)
+    conn.query = mock_query
+
+    query = "SELECT * FROM my_table;"
+    result = await conn.query_with_files(query, None)
+
+    # Verify query was called with None attachments
+    mock_query.assert_called_once_with(query, None)
+    assert result is mock_rows
+
+
+async def test_query_with_files_mixed_config():
+    """Test query_with_files with mixed string and dict configuration."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Create temporary test files
+    with tempfile.NamedTemporaryFile(suffix=".jar", delete=False) as f1:
+        f1.write(b"jar content")
+        jar_path = f1.name
+
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f2:
+        f2.write(b"text content")
+        txt_path = f2.name
+
+    try:
+        # Mock the query method
+        mock_rows = Mock()
+        mock_query = AsyncMock(return_value=mock_rows)
+        conn.query = mock_query
+
+        query = "SELECT * FROM my_function('test.jar', 'custom.txt');"
+        file_config = [
+            jar_path,  # Simple string path
+            {"path": txt_path, "name": "custom.txt", "content_type": "text/plain"},
+        ]
+        result = await conn.query_with_files(query, file_config)
+
+        # Verify query was called with correct parameters
+        mock_query.assert_called_once()
+        call_args = mock_query.call_args
+        attachments = call_args[0][1]
+
+        assert len(attachments) == 2
+
+        # First attachment (from string path)
+        assert attachments[0].name == os.path.basename(jar_path)
+        assert attachments[0].content_type == "application/java-archive"
+        assert attachments[0].to_bytes() == b"jar content"
+
+        # Second attachment (from dict config)
+        assert attachments[1].name == "custom.txt"
+        assert attachments[1].content_type == "text/plain"
+        assert attachments[1].to_bytes() == b"text content"
+
+        # Verify return value
+        assert result is mock_rows
+
+    finally:
+        os.unlink(jar_path)
+        os.unlink(txt_path)
+
+
+async def test_query_with_files_invalid_file_config():
+    """Test query_with_files with invalid file configuration."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    query = "SELECT * FROM my_table;"
+
+    # Test with invalid type in file_paths
+    with pytest.raises(
+        ValueError, match="file_paths must contain strings or dictionaries"
+    ):
+        await conn.query_with_files(query, [123])  # Invalid type
+
+
+async def test_exec_with_files_dict_missing_path():
+    """Test exec_with_files with dictionary missing required path key."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    query = "SELECT * FROM my_table;"
+    file_config = [{"name": "test.jar"}]  # Missing 'path' key
+
+    with pytest.raises(KeyError):
+        await conn.exec_with_files(query, file_config)
+
+
+async def test_query_with_files_dict_missing_path():
+    """Test query_with_files with dictionary missing required path key."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    query = "SELECT * FROM my_table;"
+    file_config = [{"name": "test.jar"}]  # Missing 'path' key
+
+    with pytest.raises(KeyError):
+        await conn.query_with_files(query, file_config)
+
+
+async def test_exec_with_files_unknown_content_type():
+    """Test exec_with_files with unknown file extension."""
+
+    async def token_provider() -> str:
+        return "valid_token"
+
+    conn = APIConnection.from_dsn(
+        "https://_:sometoken@api.deltastream.io/v2?sessionID=123", token_provider
+    )
+
+    # Create temporary test file with unknown extension
+    with tempfile.NamedTemporaryFile(suffix=".unknown", delete=False) as f:
+        f.write(b"unknown content")
+        unknown_path = f.name
+
+    try:
+        # Mock the exec method
+        mock_exec = AsyncMock()
+        conn.exec = mock_exec
+
+        query = "SELECT * FROM my_function('test.unknown');"
+        await conn.exec_with_files(query, [unknown_path])
+
+        # Verify exec was called with correct parameters
+        mock_exec.assert_called_once()
+        call_args = mock_exec.call_args
+        attachments = call_args[0][1]
+
+        assert len(attachments) == 1
+        assert attachments[0].name == os.path.basename(unknown_path)
+        assert attachments[0].content_type is None  # Unknown content type
+        assert attachments[0].to_bytes() == b"unknown content"
+
+    finally:
+        os.unlink(unknown_path)

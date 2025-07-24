@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union, Tuple
 import json
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
 from deltastream.api.controlplane.openapi_client.models import (
@@ -58,8 +58,19 @@ class StatementHandler:
             if not statement_request.statement:
                 raise ValueError("The statement field cannot be empty.")
 
+            attachments_list: Optional[List[Union[bytes, str, Tuple[str, bytes]]]] = (
+                [
+                    (b.name if b.name else "attachment", b.to_bytes())
+                    for b in attachments
+                ]
+                if attachments
+                else None
+            )
+
             initial_response = self.api.submit_statement(
-                request=statement_request, _content_type="multipart/form-data"
+                request=statement_request,
+                attachments=attachments_list,
+                _content_type="multipart/form-data",
             )
             if isinstance(initial_response, ResultSet):
                 result_set = initial_response
