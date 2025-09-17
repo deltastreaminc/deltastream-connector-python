@@ -24,7 +24,7 @@ from deltastream.api.controlplane.openapi_client.models.dataplane_request import
 from deltastream.api.controlplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
 from deltastream.api.controlplane.openapi_client.models.result_set_context import ResultSetContext
 from deltastream.api.controlplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
-from typing import Set
+from typing import Optional, Set
 from typing_extensions import Self
 
 class ResultSetMetadata(BaseModel):
@@ -32,8 +32,8 @@ class ResultSetMetadata(BaseModel):
     ResultSetMetadata
     """ # noqa: E501
     encoding: StrictStr
-    partition_info: Optional[List[ResultSetPartitionInfo]] = Field(default=None, alias="partitionInfo")
-    columns: Optional[Annotated[List[ResultSetColumnsInner], Field(min_length=0)]] = None
+    partition_info: Optional[List[ResultSetPartitionInfo]] = Field(alias="partitionInfo")
+    columns: Annotated[List[ResultSetColumnsInner], Field(min_length=0)]
     dataplane_request: Optional[DataplaneRequest] = Field(default=None, alias="dataplaneRequest")
     context: Optional[ResultSetContext] = None
     __properties: ClassVar[List[str]] = ["encoding", "partitionInfo", "columns", "dataplaneRequest", "context"]
@@ -104,6 +104,11 @@ class ResultSetMetadata(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of context
         if self.context:
             _dict['context'] = self.context.to_dict()
+        # set to None if partition_info (nullable) is None
+        # and model_fields_set contains the field
+        if self.partition_info is None and "partition_info" in self.model_fields_set:
+            _dict['partitionInfo'] = None
+
         return _dict
 
     @classmethod

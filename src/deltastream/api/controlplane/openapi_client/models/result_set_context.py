@@ -19,6 +19,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
+from uuid import UUID
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -26,7 +27,7 @@ class ResultSetContext(BaseModel):
     """
     ResultSetContext
     """ # noqa: E501
-    organization_id: Optional[StrictStr] = Field(default=None, alias="organizationID")
+    organization_id: Optional[UUID] = Field(default=None, alias="organizationID")
     role_name: Optional[StrictStr] = Field(default=None, alias="roleName")
     database_name: Optional[StrictStr] = Field(default=None, alias="databaseName")
     schema_name: Optional[StrictStr] = Field(default=None, alias="schemaName")

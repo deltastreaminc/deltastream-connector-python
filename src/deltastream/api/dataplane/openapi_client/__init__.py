@@ -16,26 +16,87 @@
 
 __version__ = "1.0.0"
 
-# import apis into sdk package
-from deltastream.api.dataplane.openapi_client.api.dataplane_api import DataplaneApi
+# Define package exports
+__all__ = [
+    "DataplaneApi",
+    "ApiResponse",
+    "ApiClient",
+    "Configuration",
+    "OpenApiException",
+    "ApiTypeError",
+    "ApiValueError",
+    "ApiKeyError",
+    "ApiAttributeError",
+    "ApiException",
+    "ErrorResponse",
+    "ResultSet",
+    "ResultSetColumnsInner",
+    "ResultSetDataInnerInner",
+    "ResultSetMetadata",
+    "ResultSetPartitionInfo",
+    "StatementStatus",
+    "Version",
+]
+
+if __import__("typing").TYPE_CHECKING:
+    # import apis into sdk package
+    from deltastream.api.dataplane.openapi_client.api.dataplane_api import DataplaneApi as DataplaneApi
+    
+    # import ApiClient
+    from deltastream.api.dataplane.openapi_client.api_response import ApiResponse as ApiResponse
+    from deltastream.api.dataplane.openapi_client.api_client import ApiClient as ApiClient
+    from deltastream.api.dataplane.openapi_client.configuration import Configuration as Configuration
+    from deltastream.api.dataplane.openapi_client.exceptions import OpenApiException as OpenApiException
+    from deltastream.api.dataplane.openapi_client.exceptions import ApiTypeError as ApiTypeError
+    from deltastream.api.dataplane.openapi_client.exceptions import ApiValueError as ApiValueError
+    from deltastream.api.dataplane.openapi_client.exceptions import ApiKeyError as ApiKeyError
+    from deltastream.api.dataplane.openapi_client.exceptions import ApiAttributeError as ApiAttributeError
+    from deltastream.api.dataplane.openapi_client.exceptions import ApiException as ApiException
+    
+    # import models into sdk package
+    from deltastream.api.dataplane.openapi_client.models.error_response import ErrorResponse as ErrorResponse
+    from deltastream.api.dataplane.openapi_client.models.result_set import ResultSet as ResultSet
+    from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner as ResultSetColumnsInner
+    from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner as ResultSetDataInnerInner
+    from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata as ResultSetMetadata
+    from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo as ResultSetPartitionInfo
+    from deltastream.api.dataplane.openapi_client.models.statement_status import StatementStatus as StatementStatus
+    from deltastream.api.dataplane.openapi_client.models.version import Version as Version
+    
+else:
+    from lazy_imports import LazyModule, as_package, load
+
+    load(
+        LazyModule(
+            *as_package(__file__),
+            ("__version__", __version__),
+            ("__all__", __all__),
+            """# import apis into sdk package
+from deltastream.api.dataplane.openapi_client.api.dataplane_api import DataplaneApi as DataplaneApi
 
 # import ApiClient
-from deltastream.api.dataplane.openapi_client.api_response import ApiResponse
-from deltastream.api.dataplane.openapi_client.api_client import ApiClient
-from deltastream.api.dataplane.openapi_client.configuration import Configuration
-from deltastream.api.dataplane.openapi_client.exceptions import OpenApiException
-from deltastream.api.dataplane.openapi_client.exceptions import ApiTypeError
-from deltastream.api.dataplane.openapi_client.exceptions import ApiValueError
-from deltastream.api.dataplane.openapi_client.exceptions import ApiKeyError
-from deltastream.api.dataplane.openapi_client.exceptions import ApiAttributeError
-from deltastream.api.dataplane.openapi_client.exceptions import ApiException
+from deltastream.api.dataplane.openapi_client.api_response import ApiResponse as ApiResponse
+from deltastream.api.dataplane.openapi_client.api_client import ApiClient as ApiClient
+from deltastream.api.dataplane.openapi_client.configuration import Configuration as Configuration
+from deltastream.api.dataplane.openapi_client.exceptions import OpenApiException as OpenApiException
+from deltastream.api.dataplane.openapi_client.exceptions import ApiTypeError as ApiTypeError
+from deltastream.api.dataplane.openapi_client.exceptions import ApiValueError as ApiValueError
+from deltastream.api.dataplane.openapi_client.exceptions import ApiKeyError as ApiKeyError
+from deltastream.api.dataplane.openapi_client.exceptions import ApiAttributeError as ApiAttributeError
+from deltastream.api.dataplane.openapi_client.exceptions import ApiException as ApiException
 
 # import models into sdk package
-from deltastream.api.dataplane.openapi_client.models.error_response import ErrorResponse
-from deltastream.api.dataplane.openapi_client.models.result_set import ResultSet
-from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
-from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
-from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
-from deltastream.api.dataplane.openapi_client.models.statement_status import StatementStatus
-from deltastream.api.dataplane.openapi_client.models.version import Version
+from deltastream.api.dataplane.openapi_client.models.error_response import ErrorResponse as ErrorResponse
+from deltastream.api.dataplane.openapi_client.models.result_set import ResultSet as ResultSet
+from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner as ResultSetColumnsInner
+from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner as ResultSetDataInnerInner
+from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata as ResultSetMetadata
+from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo as ResultSetPartitionInfo
+from deltastream.api.dataplane.openapi_client.models.statement_status import StatementStatus as StatementStatus
+from deltastream.api.dataplane.openapi_client.models.version import Version as Version
+
+""",
+            name=__name__,
+            doc=__doc__,
+        )
+    )

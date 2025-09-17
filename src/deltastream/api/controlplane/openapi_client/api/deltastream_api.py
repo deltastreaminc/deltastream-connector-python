@@ -19,6 +19,7 @@ from typing_extensions import Annotated
 from pydantic import Field, StrictBytes, StrictStr, field_validator
 from typing import List, Optional, Tuple, Union
 from typing_extensions import Annotated
+from uuid import UUID
 from deltastream.api.controlplane.openapi_client.models.result_set import ResultSet
 from deltastream.api.controlplane.openapi_client.models.statement_request import StatementRequest
 from deltastream.api.controlplane.openapi_client.models.version import Version
@@ -45,7 +46,7 @@ class DeltastreamApi:
     def download_resource(
         self,
         resource_type: StrictStr,
-        organization_id: StrictStr,
+        organization_id: UUID,
         resource_name: StrictStr,
         _request_timeout: Union[
             None,
@@ -126,7 +127,7 @@ class DeltastreamApi:
     def download_resource_with_http_info(
         self,
         resource_type: StrictStr,
-        organization_id: StrictStr,
+        organization_id: UUID,
         resource_name: StrictStr,
         _request_timeout: Union[
             None,
@@ -207,7 +208,7 @@ class DeltastreamApi:
     def download_resource_without_preload_content(
         self,
         resource_type: StrictStr,
-        organization_id: StrictStr,
+        organization_id: UUID,
         resource_name: StrictStr,
         _request_timeout: Union[
             None,
@@ -354,7 +355,7 @@ class DeltastreamApi:
     @validate_call
     def get_statement_status(
         self,
-        statement_id: StrictStr,
+        statement_id: UUID,
         session_id: Optional[StrictStr] = None,
         partition_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = None,
         timezone: Optional[StrictStr] = None,
@@ -440,7 +441,7 @@ class DeltastreamApi:
     @validate_call
     def get_statement_status_with_http_info(
         self,
-        statement_id: StrictStr,
+        statement_id: UUID,
         session_id: Optional[StrictStr] = None,
         partition_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = None,
         timezone: Optional[StrictStr] = None,
@@ -526,7 +527,7 @@ class DeltastreamApi:
     @validate_call
     def get_statement_status_without_preload_content(
         self,
-        statement_id: StrictStr,
+        statement_id: UUID,
         session_id: Optional[StrictStr] = None,
         partition_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = None,
         timezone: Optional[StrictStr] = None,
@@ -939,7 +940,7 @@ class DeltastreamApi:
 
 
 
-    #@validate_call
+    @validate_call
     def submit_statement(
         self,
         request: StatementRequest,
@@ -1247,3 +1248,5 @@ class DeltastreamApi:
             _host=_host,
             _request_auth=_request_auth
         )
+
+

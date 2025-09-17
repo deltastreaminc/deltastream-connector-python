@@ -13,7 +13,29 @@
 """  # noqa: E501
 
 
-# import models into model package
+if __import__("typing").TYPE_CHECKING:
+    # import models into model package
+    from deltastream.api.controlplane.openapi_client.models.dataplane_request import DataplaneRequest
+    from deltastream.api.controlplane.openapi_client.models.error_response import ErrorResponse
+    from deltastream.api.controlplane.openapi_client.models.organization import Organization
+    from deltastream.api.controlplane.openapi_client.models.result_set import ResultSet
+    from deltastream.api.controlplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
+    from deltastream.api.controlplane.openapi_client.models.result_set_context import ResultSetContext
+    from deltastream.api.controlplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
+    from deltastream.api.controlplane.openapi_client.models.result_set_metadata import ResultSetMetadata
+    from deltastream.api.controlplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
+    from deltastream.api.controlplane.openapi_client.models.statement_request import StatementRequest
+    from deltastream.api.controlplane.openapi_client.models.statement_request_parameters import StatementRequestParameters
+    from deltastream.api.controlplane.openapi_client.models.statement_status import StatementStatus
+    from deltastream.api.controlplane.openapi_client.models.version import Version
+    
+else:
+    from lazy_imports import LazyModule, as_package, load
+
+    load(
+        LazyModule(
+            *as_package(__file__),
+            """# import models into model package
 from deltastream.api.controlplane.openapi_client.models.dataplane_request import DataplaneRequest
 from deltastream.api.controlplane.openapi_client.models.error_response import ErrorResponse
 from deltastream.api.controlplane.openapi_client.models.organization import Organization
@@ -27,3 +49,9 @@ from deltastream.api.controlplane.openapi_client.models.statement_request import
 from deltastream.api.controlplane.openapi_client.models.statement_request_parameters import StatementRequestParameters
 from deltastream.api.controlplane.openapi_client.models.statement_status import StatementStatus
 from deltastream.api.controlplane.openapi_client.models.version import Version
+
+""",
+            name=__name__,
+            doc=__doc__,
+        )
+    )

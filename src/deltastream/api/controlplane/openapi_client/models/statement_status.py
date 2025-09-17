@@ -19,6 +19,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
+from uuid import UUID
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -28,8 +29,8 @@ class StatementStatus(BaseModel):
     """ # noqa: E501
     sql_state: StrictStr = Field(alias="sqlState")
     message: Optional[StrictStr] = None
-    statement_id: StrictStr = Field(alias="statementID")
-    statement_ids: Optional[List[StrictStr]] = Field(default=None, description="IDs for each statement when a multi-statement SQL is submitted", alias="statementIDs")
+    statement_id: UUID = Field(alias="statementID")
+    statement_ids: Optional[List[UUID]] = Field(default=None, description="IDs for each statement when a multi-statement SQL is submitted", alias="statementIDs")
     created_on: StrictInt = Field(description="UTC POSIX timestamp of when statement was submitted", alias="createdOn")
     __properties: ClassVar[List[str]] = ["sqlState", "message", "statementID", "statementIDs", "createdOn"]
 

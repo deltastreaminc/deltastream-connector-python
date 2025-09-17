@@ -19,6 +19,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
+from uuid import UUID
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -26,7 +27,7 @@ class Organization(BaseModel):
     """
     Organization
     """ # noqa: E501
-    organization_id: StrictStr = Field(alias="organizationID")
+    organization_id: UUID = Field(alias="organizationID")
     default_role_name: StrictStr = Field(alias="defaultRoleName")
     granted_roles: Optional[List[StrictStr]] = Field(default=None, alias="grantedRoles")
     inherited_roles: Optional[List[StrictStr]] = Field(default=None, alias="inheritedRoles")

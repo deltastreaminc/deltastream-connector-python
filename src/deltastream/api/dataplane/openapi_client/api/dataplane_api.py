@@ -11,10 +11,15 @@
     Do not edit the class manually.
 """  # noqa: E501
 
+import warnings
 from pydantic import validate_call, Field, StrictFloat, StrictStr, StrictInt
 from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
+from pydantic import Field, StrictStr
+from typing import Optional
+from typing_extensions import Annotated
+from uuid import UUID
 from deltastream.api.dataplane.openapi_client.models.result_set import ResultSet
 from deltastream.api.dataplane.openapi_client.models.version import Version
 
@@ -39,7 +44,7 @@ class DataplaneApi:
     @validate_call
     def get_statement_status(
         self,
-        statement_id: StrictStr,
+        statement_id: UUID,
         session_id: Optional[StrictStr] = None,
         partition_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = None,
         timezone: Optional[StrictStr] = None,
@@ -125,7 +130,7 @@ class DataplaneApi:
     @validate_call
     def get_statement_status_with_http_info(
         self,
-        statement_id: StrictStr,
+        statement_id: UUID,
         session_id: Optional[StrictStr] = None,
         partition_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = None,
         timezone: Optional[StrictStr] = None,
@@ -211,7 +216,7 @@ class DataplaneApi:
     @validate_call
     def get_statement_status_without_preload_content(
         self,
-        statement_id: StrictStr,
+        statement_id: UUID,
         session_id: Optional[StrictStr] = None,
         partition_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = None,
         timezone: Optional[StrictStr] = None,

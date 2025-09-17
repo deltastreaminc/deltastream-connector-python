@@ -20,6 +20,7 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
+from uuid import UUID
 from deltastream.api.controlplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
 from deltastream.api.controlplane.openapi_client.models.result_set_metadata import ResultSetMetadata
 from typing import Optional, Set
@@ -31,8 +32,8 @@ class ResultSet(BaseModel):
     """ # noqa: E501
     sql_state: StrictStr = Field(alias="sqlState")
     message: Optional[StrictStr] = None
-    statement_id: StrictStr = Field(alias="statementID")
-    statement_ids: Optional[List[StrictStr]] = Field(default=None, description="IDs for each statement when a multi-statement SQL is submitted", alias="statementIDs")
+    statement_id: UUID = Field(alias="statementID")
+    statement_ids: Optional[List[UUID]] = Field(default=None, description="IDs for each statement when a multi-statement SQL is submitted", alias="statementIDs")
     created_on: StrictInt = Field(description="UTC POSIX timestamp of when statement was submitted", alias="createdOn")
     metadata: ResultSetMetadata
     data: Optional[Annotated[List[List[Optional[ResultSetDataInnerInner]]], Field(min_length=0)]] = Field(default=None, description="Each item within a column of data is expressed as a string, regardless of the DeltaStream type of the column. For example, the number 1.0 will be returned as \"1.0\".")

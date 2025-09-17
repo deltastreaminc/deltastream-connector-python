@@ -20,9 +20,10 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
+from uuid import UUID
 from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
 from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-from typing import Set
+from typing import Optional, Set
 from typing_extensions import Self
 
 class ResultSet(BaseModel):
@@ -31,7 +32,7 @@ class ResultSet(BaseModel):
     """ # noqa: E501
     sql_state: StrictStr = Field(alias="sqlState")
     message: Optional[StrictStr] = None
-    statement_id: StrictStr = Field(alias="statementID")
+    statement_id: UUID = Field(alias="statementID")
     created_on: StrictInt = Field(description="UTC POSIX timestamp of when statement was submitted", alias="createdOn")
     metadata: ResultSetMetadata
     data: Optional[Annotated[List[List[ResultSetDataInnerInner]], Field(min_length=0)]] = Field(default=None, description="Each item within a column of data is expressed as a string, regardless of the DeltaStream type of the column. For example, the number 1.0 will be returned as \"1.0\".")
@@ -51,7 +52,7 @@ class ResultSet(BaseModel):
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
         # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return self.model_dump_json(by_alias=True, exclude_unset=True)
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
