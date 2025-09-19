@@ -1,6 +1,7 @@
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
 from deltastream.api.error import SQLError
 import pytest
+import uuid
 from unittest.mock import Mock, MagicMock, patch
 from deltastream.api.controlplane.openapi_client.models.result_set import ResultSet
 from deltastream.api.controlplane.openapi_client.models.result_set_metadata import (
@@ -8,6 +9,12 @@ from deltastream.api.controlplane.openapi_client.models.result_set_metadata impo
 )
 from deltastream.api.controlplane.openapi_client.models.result_set_context import (
     ResultSetContext,
+)
+from deltastream.api.controlplane.openapi_client.models.result_set_partition_info import (
+    ResultSetPartitionInfo,
+)
+from deltastream.api.controlplane.openapi_client.models.result_set_columns_inner import (
+    ResultSetColumnsInner,
 )
 from deltastream.api.handlers import StatementHandler, StatementRequest
 
@@ -24,10 +31,15 @@ async def test_statement_handler_submit_statement_passes_compute_pool_name():
     ) as MockRequest:
         handler.api.submit_statement = Mock(
             return_value=ResultSet(
-                statement_id="sid",
+                statement_id=str(uuid.uuid4()),
                 sql_state="00000",
                 message=None,
-                metadata=ResultSetMetadata(context=rsctx.__dict__, encoding="json"),
+                metadata=ResultSetMetadata(
+                    context=rsctx, 
+                    encoding="json",
+                    partition_info=[ResultSetPartitionInfo(row_count=1)],
+                    columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+                ),
                 createdOn=1704067200,
             )
         )
@@ -43,11 +55,17 @@ async def test_query_handles_sql_error():
     )
 
     # Simulate a ResultSet with an error SQL state
+    stmt_id = str(uuid.uuid4())
     error_result = ResultSet(
-        statement_id="sid",
+        statement_id=stmt_id,
         sql_state="42601",  # SQL state indicating a syntax error
         message="Syntax error near 'FROM'",
-        metadata=ResultSetMetadata(context=rsctx.__dict__, encoding="json"),
+        metadata=ResultSetMetadata(
+            context=rsctx, 
+            encoding="json",
+            partition_info=[ResultSetPartitionInfo(row_count=1)],
+            columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+        ),
         createdOn=1704067200,
     )
     handler.api.submit_statement = Mock(return_value=error_result)
@@ -57,7 +75,7 @@ async def test_query_handles_sql_error():
 
     assert "Syntax error near 'FROM'" in str(exc_info.value)
     assert exc_info.value.code == "42601"
-    assert exc_info.value.statement_id == "sid"
+    assert str(exc_info.value.statement_id) == stmt_id
 
 
 @pytest.mark.parametrize(

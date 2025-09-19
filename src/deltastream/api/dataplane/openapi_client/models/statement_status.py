@@ -19,7 +19,8 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from typing import Set
+from uuid import UUID
+from typing import Optional, Set
 from typing_extensions import Self
 
 class StatementStatus(BaseModel):
@@ -28,7 +29,7 @@ class StatementStatus(BaseModel):
     """ # noqa: E501
     sql_state: StrictStr = Field(alias="sqlState")
     message: Optional[StrictStr] = None
-    statement_id: StrictStr = Field(alias="statementID")
+    statement_id: UUID = Field(alias="statementID")
     created_on: StrictInt = Field(description="UTC POSIX timestamp of when statement was submitted", alias="createdOn")
     __properties: ClassVar[List[str]] = ["sqlState", "message", "statementID", "createdOn"]
 
@@ -46,7 +47,7 @@ class StatementStatus(BaseModel):
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
         # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return self.model_dump_json(by_alias=True, exclude_unset=True)
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:

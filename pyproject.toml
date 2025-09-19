@@ -19,7 +19,8 @@ dependencies = [
     "pydantic>=2",
     "typing-extensions>=4.7.1",
     "websockets>=14.2",
-    "python-dateutil>=2.8.2"
+    "python-dateutil>=2.8.2",
+    "lazy_imports>=1.0.0"
 ]
 
 [project.urls]
@@ -53,20 +54,9 @@ packages = ["src/deltastream"]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["src"]
+exclude = ["scripts/"]
 
-[tool.hatch.commands]
-generate-apiv2 = [
-  "openapi-generator",
-  "generate",
-  "-i",
-  "api-server-v2.yaml",
-  "-g",
-  "python",
-  "-o",
-  "./with_package",
-  "--package-name",
-  "deltastream.api.controlplane.openapi_client"
-]
+ 
 
 [tool.hatch.metadata]
 allow-direct-references = true

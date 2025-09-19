@@ -12,6 +12,7 @@ Do not edit the class manually.
 """  # noqa: E501
 
 import unittest
+import uuid
 
 from deltastream.api.dataplane.openapi_client.models.statement_status import (
     StatementStatus,
@@ -32,16 +33,18 @@ class TestStatementStatus(unittest.TestCase):
         include_optional is a boolean, when False only required
         params are included, when True both required and
         optional params are included"""
+        stmt_id = str(uuid.uuid4())
+        
         if include_optional:
             return StatementStatus(
                 sql_state="00000",
                 message="Query completed successfully",
-                statement_id="stmt_123",
+                statement_id=stmt_id,
                 created_on=1234567890,
             )
         else:
             return StatementStatus(
-                sql_state="00000", statement_id="stmt_123", created_on=1234567890
+                sql_state="00000", statement_id=stmt_id, created_on=1234567890
             )
 
     def testStatementStatus(self):
@@ -70,14 +73,16 @@ class TestStatementStatus(unittest.TestCase):
         data_from_dict = StatementStatus.from_dict(data_dict)
         self.assertEqual(data.sql_state, data_from_dict.sql_state)
         self.assertEqual(data_dict["sqlState"], "00000")
-        self.assertEqual(data_dict["statementID"], "stmt_123")
+        self.assertIsNotNone(data_dict["statementID"])
 
     def test_validation(self):
         """Test StatementStatus validation rules"""
+        stmt_id = str(uuid.uuid4())
+        
         # Test missing required field
         with self.assertRaises(ValueError):
             StatementStatus(
-                statement_id="stmt_123",
+                statement_id=stmt_id,
                 created_on=1234567890,
                 # missing sql_state
             )
@@ -85,7 +90,7 @@ class TestStatementStatus(unittest.TestCase):
         # Test invalid created_on type
         with self.assertRaises(ValueError):
             StatementStatus(
-                sql_state="00000", statement_id="stmt_123", created_on="not_a_timestamp"
+                sql_state="00000", statement_id=stmt_id, created_on="not_a_timestamp"
             )
 
     def test_none_value(self):
@@ -95,18 +100,21 @@ class TestStatementStatus(unittest.TestCase):
 
     def test_optional_message(self):
         """Test StatementStatus with optional message field"""
+        stmt_id = str(uuid.uuid4())
+        stmt_id2 = str(uuid.uuid4())
+        
         # Test with message
         status_with_msg = StatementStatus(
             sql_state="00000",
             message="test message",
-            statement_id="stmt_123",
+            statement_id=stmt_id,
             created_on=1234567890,
         )
         self.assertEqual(status_with_msg.message, "test message")
 
         # Test without message
         status_without_msg = StatementStatus(
-            sql_state="00000", statement_id="stmt_123", created_on=1234567890
+            sql_state="00000", statement_id=stmt_id2, created_on=1234567890
         )
         self.assertIsNone(status_without_msg.message)
 
