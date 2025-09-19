@@ -51,3 +51,10 @@ make build          # Build the package
 make clean          # Clean build artifacts
 make help           # Show all available targets
 ```
+
+## Release Process (for Maintainers)
+
+1. **Run Release PR Workflow:** After merging a Pull Request with `changie` changes, [trigger the "changie release PR" GitHub Actions workflow](https://github.com/deltastreaminc/deltastream-connector-python/actions/workflows/changie_generate_release_pr.yml).
+2. **Review Generated PR:** Wait for the workflow to complete. It will generate a new Pull Request ([in the repository PRs](https://github.com/deltastreaminc/deltastream-connector-python/pulls)) with the updated changelog and version bump. Review this PR.
+3. **Changelog release:** The changie release will automatically update the changelog file and push the releases in Github.
+4. **Pypi Release:** [The Pypi release workflow](https://github.com/deltastreaminc/deltastream-connector-python/actions/workflows/release.yml) will then be triggered. An approval will be required to proceed with publishing the new version of the adapter to the public repository.
