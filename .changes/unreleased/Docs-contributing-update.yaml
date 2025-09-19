@@ -1,6 +1,0 @@
-kind: Docs
-body: Update CONTRIBUTING.md to reflect Makefile usage for dependency management and testing
-time: 2025-09-19T16:35:05.000000+02:00
-custom:
-    Author: Kayrnt
-    Issue: ""
