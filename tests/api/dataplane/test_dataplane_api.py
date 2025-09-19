@@ -42,7 +42,10 @@ class TestDataplaneApi(unittest.TestCase):
                 return_value=fake_deserialize,
             ):
                 result = self.api.get_statement_status(
-                    str(uuid.uuid4()), session_id="sess1", partition_id=0, timezone="UTC"
+                    str(uuid.uuid4()),
+                    session_id="sess1",
+                    partition_id=0,
+                    timezone="UTC",
                 )
                 self.assertEqual(result, {"status": "running"})
 
@@ -72,7 +75,7 @@ class TestDataplaneApi(unittest.TestCase):
         fake_response.status = 404
 
         with patch.object(self.api.api_client, "call_api", return_value=fake_response):
-            with self.assertRaises(Exception) as context:
+            with self.assertRaises(Exception):
                 self.api.get_statement_status(str(uuid.uuid4()), session_id="sess1")
             # Note: The actual exception message will depend on the validation error
 

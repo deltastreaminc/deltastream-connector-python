@@ -15,10 +15,18 @@ import unittest
 import uuid
 
 from deltastream.api.dataplane.openapi_client.models.result_set import ResultSet
-from deltastream.api.dataplane.openapi_client.models.result_set_metadata import ResultSetMetadata
-from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import ResultSetPartitionInfo
-from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import ResultSetColumnsInner
-from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import ResultSetDataInnerInner
+from deltastream.api.dataplane.openapi_client.models.result_set_metadata import (
+    ResultSetMetadata,
+)
+from deltastream.api.dataplane.openapi_client.models.result_set_partition_info import (
+    ResultSetPartitionInfo,
+)
+from deltastream.api.dataplane.openapi_client.models.result_set_columns_inner import (
+    ResultSetColumnsInner,
+)
+from deltastream.api.dataplane.openapi_client.models.result_set_data_inner_inner import (
+    ResultSetDataInnerInner,
+)
 
 
 class TestResultSet(unittest.TestCase):
@@ -36,7 +44,7 @@ class TestResultSet(unittest.TestCase):
         params are included, when True both required and
         optional params are included"""
         stmt_id = str(uuid.uuid4())
-        
+
         metadata = ResultSetMetadata(
             encoding="json",
             partition_info=[ResultSetPartitionInfo(row_count=1)],
@@ -72,7 +80,7 @@ class TestResultSet(unittest.TestCase):
 
     def test_serialization(self):
         """Test ResultSet serialization/deserialization"""
-        # Skip complex JSON serialization test as ResultSetDataInnerInner has complex 
+        # Skip complex JSON serialization test as ResultSetDataInnerInner has complex
         # schema handling that doesn't work with standard JSON round-trip
         data = self.make_instance(include_optional=True)
         self.assertEqual(data.sql_state, "00000")
@@ -95,7 +103,7 @@ class TestResultSet(unittest.TestCase):
     def test_validation(self):
         """Test ResultSet validation rules"""
         stmt_id = str(uuid.uuid4())
-        
+
         metadata = ResultSetMetadata(
             encoding="json",
             partition_info=[ResultSetPartitionInfo(row_count=1)],

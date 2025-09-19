@@ -11,10 +11,10 @@ Thank you for contributing to the DeltaStream Python client.
   - NPM: `npx @openapitools/openapi-generator-cli`
   - Docker image: `openapitools/openapi-generator-cli`
 
-Sync dependencies:
+Install dependencies:
 
 ```bash
-uv sync
+make install
 ```
 
 #### Regenerating the controlplane OpenAPI client (apiv2)
@@ -36,10 +36,18 @@ Notes:
 #### Tests / Lint / Types
 
 ```bash
-uv run pytest
-uv run ruff check --fix
-uv run ruff format
-uv run mypy
+make test           # Run all tests
+make lint           # Run linting checks
+make format         # Format code
+make mypy           # Run type checking
+make ci             # Run all CI checks (lint, format, mypy, unit-tests, build)
 ```
 
-
+For additional options:
+```bash
+make unit-tests     # Run unit tests only (exclude integration tests)
+make check-format   # Check if code formatting is correct
+make build          # Build the package
+make clean          # Clean build artifacts
+make help           # Show all available targets
+```

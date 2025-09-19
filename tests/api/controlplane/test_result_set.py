@@ -48,7 +48,7 @@ class TestResultSet(unittest.TestCase):
         stmt_id = str(uuid.uuid4())
         stmt_id2 = str(uuid.uuid4())
         org_id = str(uuid.uuid4())
-        
+
         if include_optional:
             return ResultSet(
                 sql_state="",

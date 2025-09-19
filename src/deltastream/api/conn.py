@@ -22,6 +22,7 @@ from deltastream.api.controlplane.openapi_client.models.result_set import (
 )
 from .handlers import StatementHandler, map_error_response
 from deltastream.api.controlplane.openapi_client.configuration import Configuration
+from uuid import UUID
 
 
 class APIConnection:
@@ -31,7 +32,7 @@ class APIConnection:
         token_provider: Callable[[], Awaitable[str]],
         session_id: Optional[str],
         timezone: str,
-        organization_id: Optional[str],
+        organization_id: Optional[Union[str, UUID]],
         role_name: Optional[str],
         database_name: Optional[str],
         schema_name: Optional[str],
@@ -42,8 +43,24 @@ class APIConnection:
         self.server_url = server_url
         self.session_id = session_id
         self.timezone = timezone
+        # Convert to UUID if provided and valid
+        org_uuid = None
+        if organization_id is not None:
+            if isinstance(organization_id, UUID):
+                org_uuid = organization_id
+            elif isinstance(organization_id, str):
+                try:
+                    org_uuid = UUID(organization_id)
+                except ValueError as e:
+                    raise ValueError(
+                        f"Invalid organization_id: '{organization_id}' is not a valid UUID string"
+                    ) from e
+            else:
+                raise TypeError(
+                    f"organization_id must be a string or UUID, got {type(organization_id)}"
+                )
         self.rsctx = ResultSetContext(
-            organization_id=organization_id,
+            organization_id=org_uuid,
             role_name=role_name,
             database_name=database_name,
             schema_name=schema_name,
@@ -145,11 +162,13 @@ class APIConnection:
                 )
 
                 if dp_req.request_type == "result-set":
-                    dp_rs = await dpconn.get_statement_status(dp_req.statement_id, 0)
+                    dp_rs = await dpconn.get_statement_status(
+                        UUID(dp_req.statement_id), 0
+                    )
                     cp_rs = self._dataplane_to_controlplane_resultset(dp_rs)
 
                     async def cp_get_statement_status(
-                        statement_id: str, partition_id: int
+                        statement_id: UUID, partition_id: int
                     ) -> CPResultSet:
                         dp_result = await dpconn.get_statement_status(
                             statement_id, partition_id
@@ -169,7 +188,7 @@ class APIConnection:
             cp_rs = self._dataplane_to_controlplane_resultset(rs)
 
             async def cp_get_statement_status(
-                statement_id: str, partition_id: int
+                statement_id: UUID, partition_id: int
             ) -> CPResultSet:
                 result = await self.statement_handler.get_statement_status(
                     statement_id, partition_id
@@ -306,7 +325,7 @@ class APIConnection:
         cp_meta = CPResultSetMetadata(
             encoding=getattr(meta, "encoding", ""),
             partitionInfo=getattr(meta, "partition_info", None),
-            columns=getattr(meta, "columns", None),
+            columns=getattr(meta, "columns", []),
             dataplaneRequest=getattr(meta, "dataplane_request", None),
             context=getattr(meta, "context", None),
         )
@@ -330,7 +349,7 @@ class APIConnection:
             raise
 
     async def get_statement_status(
-        self, statement_id: str, partition_id: int
+        self, statement_id: UUID, partition_id: int
     ) -> CPResultSet:
         try:
             await self._set_auth_header()

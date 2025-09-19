@@ -1,4 +1,5 @@
 from enum import Enum
+from uuid import UUID
 
 
 class InterfaceError(Exception):
@@ -32,7 +33,7 @@ class ServiceUnavailableError(Exception):
 
 
 class SQLError(Exception):
-    def __init__(self, message: str, code: str, statement_id: str):
+    def __init__(self, message: str, code: str, statement_id: UUID):
         super().__init__(message)
         self.name = "SQLError"
         try:

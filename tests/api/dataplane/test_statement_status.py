@@ -34,7 +34,7 @@ class TestStatementStatus(unittest.TestCase):
         params are included, when True both required and
         optional params are included"""
         stmt_id = str(uuid.uuid4())
-        
+
         if include_optional:
             return StatementStatus(
                 sql_state="00000",
@@ -78,7 +78,7 @@ class TestStatementStatus(unittest.TestCase):
     def test_validation(self):
         """Test StatementStatus validation rules"""
         stmt_id = str(uuid.uuid4())
-        
+
         # Test missing required field
         with self.assertRaises(ValueError):
             StatementStatus(
@@ -102,7 +102,7 @@ class TestStatementStatus(unittest.TestCase):
         """Test StatementStatus with optional message field"""
         stmt_id = str(uuid.uuid4())
         stmt_id2 = str(uuid.uuid4())
-        
+
         # Test with message
         status_with_msg = StatementStatus(
             sql_state="00000",

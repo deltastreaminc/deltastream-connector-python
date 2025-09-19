@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional, Protocol, List, Any, AsyncIterator
+from uuid import UUID
 from .rows import Column
 
 
@@ -12,14 +13,14 @@ class Rows(Protocol):
 @dataclass
 class DataplaneRequest:
     uri: str
-    statement_id: str
+    statement_id: UUID
     token: str
     request_type: str
 
 
 @dataclass
 class ResultSetContext:
-    organization_id: Optional[str] = None
+    organization_id: Optional[UUID] = None
     role_name: Optional[str] = None
     database_name: Optional[str] = None
     schema_name: Optional[str] = None
@@ -35,7 +36,7 @@ class ResultSetMetadata:
 
 @dataclass
 class ResultSet:
-    statement_id: str
+    statement_id: UUID
     sql_state: str
     message: Optional[str]
     metadata: ResultSetMetadata

@@ -1,6 +1,7 @@
 from typing import Optional
 from urllib.parse import urlparse, parse_qs
 import asyncio
+from uuid import UUID
 
 from deltastream.api.dataplane.openapi_client import (
     Configuration,
@@ -34,14 +35,14 @@ class DPAPIConnection:
 
         self.api = DataplaneApi(config)
 
-    def _get_statement_status_api(self, statement_id: str, partition_id: int):
+    def _get_statement_status_api(self, statement_id: UUID, partition_id: int):
         resp = self.api.get_statement_status(
             statement_id=statement_id, partition_id=partition_id
         )
         return resp
 
     async def get_statement_status(
-        self, statement_id: str, partition_id: int
+        self, statement_id: UUID, partition_id: int
     ) -> ResultSet:
         try:
             resp = self._get_statement_status_api(statement_id, partition_id)
@@ -65,7 +66,11 @@ class DPAPIConnection:
                         statement_status.statement_id, partition_id
                     )
                 else:
-                    raise SQLError("Invalid statement status", "", "")
+                    raise SQLError(
+                        "Invalid statement status",
+                        "",
+                        UUID("00000000-0000-0000-0000-000000000000"),
+                    )
             else:
                 result_set = resp.body
                 if result_set.sql_state == SqlState.SQL_STATE_SUCCESSFUL_COMPLETION:
@@ -79,7 +84,7 @@ class DPAPIConnection:
         except Exception as exc:
             raise RuntimeError(str(exc))
 
-    async def wait_for_completion(self, statement_id: str) -> ResultSet:
+    async def wait_for_completion(self, statement_id: UUID) -> ResultSet:
         result_set = await self.get_statement_status(statement_id, 0)
         if result_set.sql_state == SqlState.SQL_STATE_SUCCESSFUL_COMPLETION:
             return result_set
