@@ -47,7 +47,7 @@ class TestResultSetMetadata(unittest.TestCase):
         optional params are included"""
         stmt_id = str(uuid.uuid4())
         org_id = str(uuid.uuid4())
-        
+
         if include_optional:
             return ResultSetMetadata(
                 encoding="json",

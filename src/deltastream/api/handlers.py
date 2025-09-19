@@ -1,5 +1,6 @@
 from typing import Optional, List, Union, Tuple
 import json
+from uuid import UUID
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
 from deltastream.api.controlplane.openapi_client.models import (
     ResultSet,
@@ -44,7 +45,9 @@ class StatementHandler:
         try:
             statement_request = StatementRequest(
                 statement=query,
-                organization=self.rsctx.organization_id,
+                organization=str(self.rsctx.organization_id)
+                if self.rsctx.organization_id is not None
+                else None,
                 role=self.rsctx.role_name,
                 database=self.rsctx.database_name,
                 schema=self.rsctx.schema_name,
@@ -95,7 +98,7 @@ class StatementHandler:
                     raise SQLError(
                         result_set.message or "No message provided",
                         result_set.sql_state,
-                        result_set.statement_id or "",
+                        result_set.statement_id,
                     )
 
         except ValidationError:
@@ -105,7 +108,7 @@ class StatementHandler:
             raise
 
     async def get_statement_status(
-        self, statement_id: str, partition_id: int
+        self, statement_id: UUID, partition_id: int
     ) -> ResultSet:
         try:
             result_set = self.api.get_statement_status(
@@ -124,7 +127,7 @@ class StatementHandler:
                     raise SQLError(
                         result_set.message or "No message provided",
                         result_set.sql_state,
-                        result_set.statement_id or "",
+                        result_set.statement_id,
                     )
 
         except ApiException as err:
@@ -133,7 +136,7 @@ class StatementHandler:
         except Exception as e:
             raise e
 
-    async def get_resultset(self, statement_id: str, partition_id: int) -> ResultSet:
+    async def get_resultset(self, statement_id: UUID, partition_id: int) -> ResultSet:
         initial_response = await self.get_statement_status(statement_id, partition_id)
         result = initial_response
 

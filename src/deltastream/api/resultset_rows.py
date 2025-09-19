@@ -1,4 +1,5 @@
 from typing import AsyncIterator, List, Optional, Any, Tuple, Callable, Awaitable
+from uuid import UUID
 
 from deltastream.api.controlplane.openapi_client import ResultSet
 
@@ -10,7 +11,7 @@ from .rows import castRowData, Column
 class ResultsetRows(Rows):
     def __init__(
         self,
-        get_statement_status: Callable[[str, int], Awaitable[ResultSet]],
+        get_statement_status: Callable[[UUID, int], Awaitable[ResultSet]],
         result_set: ResultSet,
     ):
         self.current_row_idx: int = -1

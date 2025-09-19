@@ -89,31 +89,32 @@ async def test_exec_updates_context():
     conn = APIConnection.from_dsn(
         "https://api.deltastream.io/v2?sessionID=123", token_provider
     )
-    # Mock the submit_statement response
+    # Mock the submit_statement response with UUID for OpenAPI model
+    test_uuid = uuid.uuid4()
     mock_context = ResultSetContext(
-        organization_id=str(uuid.uuid4()),
-        role_name="new_role",
-        database_name="new_db",
-        schema_name="new_schema",
-        store_name="new_store",
-        compute_pool_name="new_pool",
+        organizationID=test_uuid,
+        roleName="new_role",
+        databaseName="new_db",
+        schemaName="new_schema",
+        storeName="new_store",
+        computePoolName="new_pool",
     )
     mock_metadata = ResultSetMetadata(
-        context=mock_context, 
+        context=mock_context,
         encoding="json",
         partition_info=[ResultSetPartitionInfo(row_count=1)],
-        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)],
     )
     mock_result = ResultSet(
         metadata=mock_metadata,
         sql_state="00000",
-        statement_id=str(uuid.uuid4()),
+        statement_id=uuid.uuid4(),
         message=None,
         createdOn=1704067200,
     )
     conn.submit_statement = AsyncMock(return_value=mock_result)
     await conn.exec("USE DATABASE new_db")
-    assert conn.rsctx.organization_id == mock_context.organization_id
+    assert conn.rsctx.organization_id == test_uuid
     assert conn.rsctx.role_name == "new_role"
     assert conn.rsctx.database_name == "new_db"
     assert conn.rsctx.schema_name == "new_schema"
@@ -134,24 +135,25 @@ async def test_from_dsn_parses_compute_pool_name():
         "https://api.deltastream.io/v2?sessionID=123", token_provider
     )
 
-    # Mock the submit_statement response
+    # Mock the submit_statement response with UUID for OpenAPI model
+    test_uuid2 = uuid.uuid4()
     mock_context = ResultSetContext(
-        organization_id=str(uuid.uuid4()),
-        role_name="new_role",
-        database_name="new_db",
-        schema_name="new_schema",
-        store_name="new_store",
+        organizationID=test_uuid2,  # OpenAPI model expects UUID with correct field name
+        roleName="new_role",
+        databaseName="new_db",
+        schemaName="new_schema",
+        storeName="new_store",
     )
     mock_metadata = ResultSetMetadata(
-        encoding="json", 
+        encoding="json",
         context=mock_context,
         partition_info=[ResultSetPartitionInfo(row_count=1)],
-        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)],
     )
     mock_result = ResultSet(
         metadata=mock_metadata,
         sql_state="00000",
-        statement_id=str(uuid.uuid4()),
+        statement_id=uuid.uuid4(),
         created_on=1710848400,
     )
 
@@ -159,7 +161,7 @@ async def test_from_dsn_parses_compute_pool_name():
 
     await conn.exec("USE DATABASE new_db")
 
-    assert conn.rsctx.organization_id == mock_context.organization_id
+    assert conn.rsctx.organization_id == test_uuid2
     assert conn.rsctx.role_name == "new_role"
     assert conn.rsctx.database_name == "new_db"
     assert conn.rsctx.schema_name == "new_schema"
@@ -178,12 +180,12 @@ async def test_query_with_resultset():
     mock_metadata = ResultSetMetadata(
         encoding="json",
         partition_info=[ResultSetPartitionInfo(row_count=1)],
-        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)],
     )
     mock_result = ResultSet(
         metadata=mock_metadata,
         sql_state="00000",
-        statement_id=str(uuid.uuid4()),
+        statement_id=uuid.uuid4(),
         created_on=1710848400,
     )
 
@@ -205,20 +207,20 @@ async def test_query_with_dataplane():
     # Mock the submit_statement response for a data plane request
     mock_dp_request = DataplaneRequest(
         uri="https://dp.deltastream.io/v2/statements/123",
-        statement_id=str(uuid.uuid4()),
+        statementID=str(uuid.uuid4()),  # Use proper field name and convert to string
         token="dp_token",
-        request_type="result-set",
+        requestType="result-set",  # Use proper field name
     )
     mock_metadata = ResultSetMetadata(
-        encoding="json", 
+        encoding="json",
         dataplane_request=mock_dp_request,
         partition_info=[ResultSetPartitionInfo(row_count=1)],
-        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)],
     )
     mock_result = ResultSet(
         metadata=mock_metadata,
         sql_state="00000",
-        statement_id=str(uuid.uuid4()),
+        statement_id=uuid.uuid4(),
         created_on=1710848400,
     )
 
@@ -229,7 +231,7 @@ async def test_query_with_dataplane():
         dp_result = ResultSet(
             metadata=mock_metadata,
             sql_state="00000",
-            statement_id=str(uuid.uuid4()),
+            statement_id=uuid.uuid4(),
             created_on=1710848400,
         )
         mock_dp_conn.return_value.get_statement_status = AsyncMock(
@@ -250,17 +252,17 @@ async def test_get_statement_status():
     mock_metadata = ResultSetMetadata(
         encoding="json",
         partition_info=[ResultSetPartitionInfo(row_count=1)],
-        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+        columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)],
     )
     mock_result = ResultSet(
         metadata=mock_metadata,
         sql_state="00000",
-        statement_id=str(uuid.uuid4()),
+        statement_id=uuid.uuid4(),
         created_on=1710848400,
     )
     conn.statement_handler.get_statement_status = AsyncMock(return_value=mock_result)
 
-    result = await conn.get_statement_status("statement_123", 0)
+    result = await conn.get_statement_status(str(uuid.uuid4()), 0)
     assert result is not None
     assert isinstance(result, ResultSet)
 

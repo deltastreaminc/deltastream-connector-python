@@ -35,10 +35,14 @@ async def test_statement_handler_submit_statement_passes_compute_pool_name():
                 sql_state="00000",
                 message=None,
                 metadata=ResultSetMetadata(
-                    context=rsctx, 
+                    context=rsctx,
                     encoding="json",
                     partition_info=[ResultSetPartitionInfo(row_count=1)],
-                    columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+                    columns=[
+                        ResultSetColumnsInner(
+                            name="col1", type="VARCHAR", nullable=True
+                        )
+                    ],
                 ),
                 createdOn=1704067200,
             )
@@ -61,10 +65,10 @@ async def test_query_handles_sql_error():
         sql_state="42601",  # SQL state indicating a syntax error
         message="Syntax error near 'FROM'",
         metadata=ResultSetMetadata(
-            context=rsctx, 
+            context=rsctx,
             encoding="json",
             partition_info=[ResultSetPartitionInfo(row_count=1)],
-            columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)]
+            columns=[ResultSetColumnsInner(name="col1", type="VARCHAR", nullable=True)],
         ),
         createdOn=1704067200,
     )

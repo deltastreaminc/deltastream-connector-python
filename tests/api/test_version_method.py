@@ -12,8 +12,14 @@ This test module covers various scenarios for the version method including:
 import pytest
 from unittest.mock import MagicMock, patch
 from deltastream.api.conn import APIConnection
-from deltastream.api.error import AuthenticationError, ServerError, ServiceUnavailableError
-from deltastream.api.controlplane.openapi_client.models.version import Version as ApiVersion
+from deltastream.api.error import (
+    AuthenticationError,
+    ServerError,
+    ServiceUnavailableError,
+)
+from deltastream.api.controlplane.openapi_client.models.version import (
+    Version as ApiVersion,
+)
 from deltastream.api.controlplane.openapi_client.exceptions import ApiException
 
 pytestmark = pytest.mark.asyncio
@@ -25,16 +31,17 @@ class TestVersionMethod:
     @pytest.fixture
     def mock_token_provider(self):
         """Create a mock token provider."""
+
         async def token_provider() -> str:
             return "valid_test_token"
+
         return token_provider
 
     @pytest.fixture
     def api_connection(self, mock_token_provider):
         """Create an APIConnection instance for testing."""
         return APIConnection.from_dsn(
-            "https://api.deltastream.io/v2?sessionID=test123",
-            mock_token_provider
+            "https://api.deltastream.io/v2?sessionID=test123", mock_token_provider
         )
 
     async def test_version_success_with_valid_token(self, api_connection):
@@ -137,11 +144,11 @@ class TestVersionMethod:
         mock_api_client = MagicMock()
         mock_configuration = MagicMock()
         mock_headers = {}
-        
+
         mock_api.api_client = mock_api_client
         mock_api_client.configuration = mock_configuration
         mock_api_client.default_headers = mock_headers
-        
+
         version_response = ApiVersion(major=2, minor=0, patch=0)
         mock_api.get_version.return_value = version_response
         api_connection.statement_handler.api = mock_api
@@ -170,7 +177,10 @@ class TestVersionMethod:
 
         # Assert
         assert result == {"major": 1, "minor": 5, "patch": 10}
-        assert conn.statement_handler.api.api_client.configuration.access_token == "test_token_from_url"
+        assert (
+            conn.statement_handler.api.api_client.configuration.access_token
+            == "test_token_from_url"
+        )
 
     async def test_version_api_exception_without_body(self, api_connection):
         """Test version method with API exception that has no body."""
@@ -201,7 +211,7 @@ class TestVersionMethod:
     async def test_version_method_is_async(self, api_connection):
         """Test that version method is properly async."""
         import inspect
-        
+
         # Assert
         assert inspect.iscoroutinefunction(api_connection.version)
 
@@ -222,22 +232,24 @@ class TestVersionMethod:
         assert set(result.keys()) == {"major", "minor", "patch"}
         assert all(isinstance(v, int) for v in result.values())
 
-    @patch('deltastream.api.conn.map_error_response')
-    async def test_version_calls_map_error_response_on_exception(self, mock_map_error, api_connection):
+    @patch("deltastream.api.conn.map_error_response")
+    async def test_version_calls_map_error_response_on_exception(
+        self, mock_map_error, api_connection
+    ):
         """Test that version method calls map_error_response when ApiException occurs."""
         # Arrange
         mock_api = MagicMock()
         error = ApiException(status=500, reason="Server Error")
         mock_api.get_version.side_effect = error
         api_connection.statement_handler.api = mock_api
-        
+
         # Mock map_error_response to raise a specific error so we can catch it
         mock_map_error.side_effect = ServerError("Mapped server error")
 
         # Act & Assert
         with pytest.raises(ServerError):
             await api_connection.version()
-        
+
         # Verify map_error_response was called with the exception
         mock_map_error.assert_called_once_with(error)
 
@@ -260,7 +272,7 @@ class TestVersionMethod:
         # Arrange
         original_rsctx = api_connection.rsctx
         original_session_id = api_connection.session_id
-        
+
         mock_api = MagicMock()
         version_response = ApiVersion(major=2, minor=0, patch=0)
         mock_api.get_version.return_value = version_response
