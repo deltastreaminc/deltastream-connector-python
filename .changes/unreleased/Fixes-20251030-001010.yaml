@@ -1,0 +1,6 @@
+kind: Fixes
+body: Fix reading rows when using interactive (streaming) queries
+time: 2025-10-30T00:10:10.751126+01:00
+custom:
+    Author: Kayrnt
+    Issue: ""

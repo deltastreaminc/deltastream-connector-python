@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 import re
 import json
 from decimal import Decimal
@@ -22,13 +22,13 @@ class Column:
 
 
 def castRowData(
-    row_data_strings: List[ResultSetDataInnerInner], columns: List[Column]
+    row_data_strings: List[Union[ResultSetDataInnerInner, Any]], columns: List[Column]
 ) -> List[Any]:
     """
     Cast row data strings to their appropriate Python types based on column definitions.
 
     Args:
-        row_data_strings: List of string values or None from the database
+        row_data_strings: List of ResultSetDataInnerInner objects or plain values from WebSocket
         columns: List of Column objects defining the data types
 
     Returns:
@@ -38,7 +38,13 @@ def castRowData(
 
     for i, column in enumerate(columns):
         row_data_string = row_data_strings[i]
-        value = row_data_string.actual_instance
+        # Handle both ResultSetDataInnerInner objects and plain values (from WebSocket)
+        value: Any
+        if hasattr(row_data_string, "actual_instance"):
+            value = row_data_string.actual_instance
+        else:
+            value = row_data_string
+
         if value is None:
             row_data.append(None)
             continue
