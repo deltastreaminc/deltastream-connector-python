@@ -68,7 +68,9 @@ class StreamingRows(Rows):
 
         async def handle_messages():
             try:
-                ws = await ws_connect(self.req.uri)
+                # Convert HTTPS URL to WSS for WebSocket connection
+                ws_uri = self.req.uri.replace("https://", "wss://", 1)
+                ws = await ws_connect(ws_uri)
                 self.ws = ws
 
                 # Send authentication
@@ -86,7 +88,31 @@ class StreamingRows(Rows):
                     data = json.loads(message)
 
                     if data["type"] == "metadata":
-                        self.metadata = PrintTopicMetadata(**data)
+                        # Convert column dictionaries to Column objects
+                        columns = []
+                        for col in data.get("columns", []):
+                            if isinstance(col, dict):
+                                # Provide default value for nullable if missing
+                                columns.append(
+                                    Column(
+                                        name=col.get("name", ""),
+                                        type=col.get("type", ""),
+                                        nullable=col.get(
+                                            "nullable", True
+                                        ),  # Default to True if not specified
+                                        length=col.get("length"),
+                                        precision=col.get("precision"),
+                                        scale=col.get("scale"),
+                                    )
+                                )
+                            else:
+                                columns.append(col)
+
+                        self.metadata = PrintTopicMetadata(
+                            type=data["type"],
+                            headers=data.get("headers", {}),
+                            columns=columns,
+                        )
                         deferred_ready.resolve()
 
                     elif data["type"] == "data":
@@ -124,17 +150,7 @@ class StreamingRows(Rows):
         if self.metadata is None:
             return []
 
-        return [
-            Column(
-                name=column.name,
-                type=column.type,
-                nullable=column.nullable,
-                length=column.length,
-                precision=column.precision,
-                scale=column.scale,
-            )
-            for column in self.metadata.columns
-        ]
+        return self.metadata.columns
 
     async def close(self) -> None:
         """Closes the WebSocket connection."""
